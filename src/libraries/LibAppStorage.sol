@@ -22,6 +22,24 @@ struct GotchipusInfo {
     uint256 nonces;
 }
 
+struct PharosInfo {
+    string name;
+    string symbol;
+    string baseUri;
+    mapping(uint256 => address) tokenOwners;
+    mapping(address => uint256) balances;
+    mapping(uint256 => address) tokenApprovals;
+    mapping(address => mapping(address => bool)) operatorApprovals;
+    mapping(uint256 => string) tokenURIs;
+    uint256 nextTokenId;
+    uint256[] allTokens;
+    mapping(uint256 => uint256) allTokensIndex;
+    mapping(address => uint256[]) ownerTokens;
+    mapping(uint256 => uint256) ownedTokensIndex;
+    mapping(address => bool) isWhitelist;
+    bool isPaused;
+}
+
 
 struct AppStorage {
     string name;
@@ -38,8 +56,7 @@ struct AppStorage {
     mapping(address => uint256[]) ownerTokens;
     mapping(uint256 => uint256) ownedTokensIndex;
     mapping(address => mapping(uint256 => GotchipusInfo)) ownedGotchipusInfos;
-    mapping(address => bool) isWhitelist;
-    bool isPaused;
+    PharosInfo pharosInfoMap;
 }
 
 
@@ -67,4 +84,13 @@ contract Modifier {
         _;
     }
 
+    modifier pharosMintIsPaused() {
+        require(!s.pharosInfoMap.isPaused, "LibAppStorage: mint paused");
+        _;
+    }
+
+    modifier onlyPharosOwner(uint256 _tokenId) {
+        require(LibMeta.msgSender() == s.pharosInfoMap.tokenOwners[_tokenId], "LibAppStorage: Only pharos owner");
+        _;
+    }
 }
