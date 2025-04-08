@@ -57,6 +57,9 @@ struct AppStorage {
     mapping(uint256 => uint256) ownedTokensIndex;
     mapping(address => mapping(uint256 => GotchipusInfo)) ownedGotchipusInfos;
     PharosInfo pharosInfoMap;
+
+    // ERC6551
+    mapping(uint256 => address) accountOwnedByTokenId;
 }
 
 
