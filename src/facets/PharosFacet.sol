@@ -9,7 +9,8 @@ import { LibMeta } from "../libraries/LibMeta.sol";
 import { LibERC721 } from "../libraries/LibERC721.sol";
 import { LibStrings } from "../libraries/LibStrings.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
-import "../interfaces/IGotchipusFacet.sol";
+import { IGotchipusFacet } from "../interfaces/IGotchipusFacet.sol";
+import { IERC6551RegistryFacet } from "../interfaces/IERC6551RegistryFacet.sol";
 
 
 contract PharosFacet is Modifier {
@@ -124,6 +125,17 @@ contract PharosFacet is Modifier {
 
     function summonGotchipus(uint256 gotchipusTokenId) external onlyPharosOwner(gotchipusTokenId) {
         LibERC721._burn(gotchipusTokenId);
+        bytes32 salt = keccak256(abi.encode(block.chainid, gotchipusTokenId, address(this)));
+        address account = erc6551RegistryFacet().createAccount(
+            address(this),
+            salt,
+            block.chainid,
+            address(this),
+            gotchipusTokenId
+        );
+
+        s.accountOwnedByTokenId[gotchipusTokenId] = account;
+
         gotchipusFacet().mint(msg.sender, gotchipusTokenId);
     }
 
@@ -150,5 +162,9 @@ contract PharosFacet is Modifier {
 
     function gotchipusFacet() internal view returns (IGotchipusFacet) {
         return IGotchipusFacet(address(this));
+    }
+
+    function erc6551RegistryFacet() internal view returns (IERC6551RegistryFacet) {
+        return IERC6551RegistryFacet(address(this));
     }
 }

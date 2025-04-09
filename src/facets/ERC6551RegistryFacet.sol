@@ -3,9 +3,9 @@ pragma solidity ^0.8.29;
 
 import { Modifier, AppStorage } from "../libraries/LibAppStorage.sol";
 import { LibERC6551Registry } from "../libraries/LibERC6551Registry.sol";
-import { IERC6551Registry } from "../interfaces/IERC6551Registry.sol";
+import { IERC6551RegistryFacet } from "../interfaces/IERC6551RegistryFacet.sol";
 
-contract ERC6551Registry is Modifier, IERC6551Registry {
+contract ERC6551RegistryFacet is Modifier, IERC6551RegistryFacet {
     function createAccount(
         address implementation,
         bytes32 salt,

@@ -60,6 +60,7 @@ struct AppStorage {
 
     // ERC6551
     mapping(uint256 => address) accountOwnedByTokenId;
+    uint256 state;
 }
 
 
