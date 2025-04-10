@@ -9,6 +9,7 @@ import { LibMeta } from "../libraries/LibMeta.sol";
 import { LibERC721 } from "../libraries/LibERC721.sol";
 import { LibStrings } from "../libraries/LibStrings.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
+import { LibDna } from "../libraries/LibDna.sol";
 import { IGotchipusFacet } from "../interfaces/IGotchipusFacet.sol";
 import { IERC6551RegistryFacet } from "../interfaces/IERC6551RegistryFacet.sol";
 
@@ -124,6 +125,8 @@ contract PharosFacet is Modifier {
     }
 
     function summonGotchipus(uint256 gotchipusTokenId) external onlyPharosOwner(gotchipusTokenId) {
+        require(s.accountOwnedByTokenId[gotchipusTokenId] == address(0), "Pharos: already summon");
+
         LibERC721._burn(gotchipusTokenId);
         bytes32 salt = keccak256(abi.encode(block.chainid, gotchipusTokenId, address(this)));
         address account = erc6551RegistryFacet().createAccount(
@@ -134,6 +137,9 @@ contract PharosFacet is Modifier {
             gotchipusTokenId
         );
 
+        uint256 randomDna = LibDna.getRandomGene(salt);
+        s.dna[gotchipusTokenId].geneSeed = randomDna;
+        s.dna[gotchipusTokenId].ruleVersion = s.dnaRuleVersion;
         s.accountOwnedByTokenId[gotchipusTokenId] = account;
 
         gotchipusFacet().mint(msg.sender, gotchipusTokenId);

@@ -40,6 +40,10 @@ struct PharosInfo {
     bool isPaused;
 }
 
+struct DNAData {
+    uint256 geneSeed;
+    uint8 ruleVersion;
+}
 
 struct AppStorage {
     string name;
@@ -61,6 +65,11 @@ struct AppStorage {
     // ERC6551
     mapping(uint256 => address) accountOwnedByTokenId;
     uint256 state;
+
+    // DNA
+    uint8 dnaRuleVersion;
+    mapping(uint256 => DNAData) dna;
+    
 }
 
 
