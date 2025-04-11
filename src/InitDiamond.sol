@@ -16,6 +16,7 @@ contract InitDiamond {
         string name;
         string symbol;
         string baseUri;
+        uint8 createUtcHour;
     }
 
 
@@ -23,7 +24,9 @@ contract InitDiamond {
         s.name = _args.name;
         s.symbol = _args.symbol;
         s.baseUri = _args.baseUri;
-
+        s.createWorldTime = uint32(block.timestamp);
+        s.createTimeForTimeHour = _args.createUtcHour;
+        
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         // erc165
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;

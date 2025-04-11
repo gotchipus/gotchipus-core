@@ -17,6 +17,14 @@ struct GotchipusInfo {
     uint8 status;
     uint8 evolution;
     bool locked;
+    uint32 epoch;
+    uint32 utc; // time zone
+    // attributes
+    DNAData dna;
+    uint8 bonding;
+    uint32 growth;
+    uint8 wisdom;
+    uint32 aether;
     // erc6551 info
     address singer;
     uint256 nonces;
@@ -61,15 +69,13 @@ struct AppStorage {
     mapping(uint256 => uint256) ownedTokensIndex;
     mapping(address => mapping(uint256 => GotchipusInfo)) ownedGotchipusInfos;
     PharosInfo pharosInfoMap;
-
+    uint32 createWorldTime;
+    uint8 createTimeForTimeHour;
     // ERC6551
     mapping(uint256 => address) accountOwnedByTokenId;
     uint256 state;
-
     // DNA
     uint8 dnaRuleVersion;
-    mapping(uint256 => DNAData) dna;
-    
 }
 
 
