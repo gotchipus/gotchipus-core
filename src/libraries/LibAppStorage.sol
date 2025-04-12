@@ -71,6 +71,9 @@ struct AppStorage {
     PharosInfo pharosInfoMap;
     uint32 createWorldTime;
     uint8 createTimeForTimeHour;
+    // action
+    mapping(uint256 => uint32) lastPetTime;
+    mapping(uint256 => uint32) lastFeedTime;
     // ERC6551
     mapping(uint256 => address) accountOwnedByTokenId;
     uint256 state;
@@ -80,7 +83,7 @@ struct AppStorage {
     // Mock farm 
     mapping(address => uint256) ownedFish;
     mapping(address => uint256) breedFish;
-    
+
     // Hooks
     // address can owned multiple hooks
     mapping(address => address[]) accountHooks;
