@@ -76,6 +76,14 @@ struct AppStorage {
     uint256 state;
     // DNA
     uint8 dnaRuleVersion;
+
+    // Mock farm 
+    mapping(address => uint256) ownedFish;
+    mapping(address => uint256) breedFish;
+    
+    // Hooks
+    // address can owned multiple hooks
+    mapping(address => address[]) accountHooks;
 }
 
 
