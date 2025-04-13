@@ -21,4 +21,4 @@ contract DNAFacet is Modifier {
     function getGene(uint256 gotchipusTokenId, uint256 index) external view returns (uint256) {
         return LibDna.getGene(gotchipusTokenId, index);
     }
-}
+}   

@@ -121,6 +121,12 @@ contract PharosFacet is Modifier {
         s.pharosInfoMap.baseUri = _baseURI;
     }
 
+    function testMint() external onlyOwner {
+        uint256 tokenId = s.pharosInfoMap.nextTokenId;
+        s.pharosInfoMap.nextTokenId++;
+        LibERC721._mint(msg.sender, tokenId);
+    }
+
     function mint(uint256 amount) external payable pharosMintIsPaused {
         bool isWhitelist = s.pharosInfoMap.isWhitelist[msg.sender];
         uint256 tokenId = s.pharosInfoMap.nextTokenId;
@@ -135,7 +141,7 @@ contract PharosFacet is Modifier {
         }
     }
 
-    function summonGotchipus(SummonArgs calldata _args) external onlyPharosOwner(_args.gotchipusTokenId) {
+    function summonGotchipus(SummonArgs calldata _args) external payable onlyPharosOwner(_args.gotchipusTokenId) {
         require(s.accountOwnedByTokenId[_args.gotchipusTokenId] == address(0), "Pharos: already summon");
 
         LibERC721._burn(_args.gotchipusTokenId);
@@ -148,7 +154,12 @@ contract PharosFacet is Modifier {
             address(this),
             _args.gotchipusTokenId
         );
-        LibTransferHelper.safeTransferFrom(_args.collateralToken, msg.sender, account, _args.stakeAmount);
+        
+        if (_args.collateralToken == address(0)) {
+            LibTransferHelper.safeTransferETH(account, _args.stakeAmount);
+        } else {
+            LibTransferHelper.safeTransferFrom(_args.collateralToken, msg.sender, account, _args.stakeAmount);
+        }
 
         uint256 randomDna = LibDna.getRandomGene(salt);
         GotchipusInfo storage _ownedPus = s.ownedGotchipusInfos[msg.sender][_args.gotchipusTokenId];

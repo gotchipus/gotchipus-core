@@ -4,6 +4,8 @@ pragma solidity ^0.8.29;
 import { Modifier, GotchipusInfo } from "../libraries/LibAppStorage.sol";
 
 contract AttributesFacet is Modifier {
+    event SetName(string indexed newName);
+
     function pet(uint256 gotchipusTokenId) external {
         require(uint256(s.lastPetTime[gotchipusTokenId]) + 1 days <= block.timestamp, "gotchipus already pet");
         s.lastPetTime[gotchipusTokenId] = uint32(block.timestamp);
@@ -22,6 +24,15 @@ contract AttributesFacet is Modifier {
         uint8 bond = bonding(gotchipusTokenId);
         pus.bonding = (bond + 50 >= type(uint8).max) ? type(uint8).max : bond + 50;
         pus.growth = (pus.growth + 50 >= type(uint32).max) ? type(uint32).max : pus.growth + 50;
+    }
+
+    function setName(string calldata newName, uint256 gotchipusTokenId) external onlyGotchipusOwner(gotchipusTokenId) {
+        s.ownedGotchipusInfos[msg.sender][gotchipusTokenId].name = newName;
+        emit SetName(newName);
+    }
+
+    function getTokenName(uint256 gotchipusTokenId) external view returns (string memory) {
+        return s.ownedGotchipusInfos[s.tokenOwners[gotchipusTokenId]][gotchipusTokenId].name;
     }
 
     function bonding(uint256 gotchipusTokenId) public view returns (uint8 bond) {
