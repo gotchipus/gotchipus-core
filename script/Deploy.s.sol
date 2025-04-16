@@ -39,19 +39,18 @@ contract Deploy is Script {
 
     /** 
      * Pharos devnet
-     * diamond: 0xD04DB12e84a902F5300335Df1c58E38B488dE8B7, 
-     * initDiamond: 0x00dAFecfa294164d5097361e8952AdF5cDF5F31c, 
-     * diamondCutFacet: 0xFC43f1558d3951cEE3c2144B9D118aAac45532c6, 
-     * diamondLoupeFacet: 0x4b6A7c9d8A099B8E1d46E3300896f6bAdA339b32, 
-     * gotchipusFacet: 0xCE79969840ef7A9C475B1571d1566a1a94e3b734, 
-     * ownershipFacet: 0x3DF34B0F925484E48B31597Cf16B1E21bd576E95, 
-     * erc6551AccountFacet: 0xFB574752A611781b33580DEb3A2FAfB590699987, 
-     * erc6551RegistryFacet: 0x860ab36539277B16cb37A4668a3A64b9135D2ADc, 
-     * attributesFacet: 0x788148eA4F59659657796579b9648f5F8202521c, 
-     * dnaFacet: 0x33dD4Ecb1d76077144035cd41CB01ac3048a3Cd7, 
-     * hooksFacet: 0x1f3a6f9369b70Ac9953efe60a55cfc9C5aF229ed, 
-     * mockMarineFarmFacet: 0x9674d64375944ae675D624863d5053FaE05f69fc 
-     * 
+     * diamond: 0x5E44AcE44aEEA600497e764a6Acd2ce4CdcbF95A, 
+     * initDiamond: 0x28e3350B608E4bcFE0f654Bd3e288E20D94A8382, 
+     * diamondCutFacet: 0xfb6CF9f914c76ccDc3Fc722b5c0D3EFa5C4F7DFA, 
+     * diamondLoupeFacet: 0xd87AC654aA730ca72681a3Aa29898a8F0ae0dd57, 
+     * gotchipusFacet: 0x1Ab5C117EFC5C358bFFF7c4fe2cf5ccCEb408309, 
+     * ownershipFacet: 0x705F094215317bAe890b78d1b374E66caa052c12, 
+     * erc6551AccountFacet: 0x16823857bC5637C99F92b0586d4497eB02F9255d, 
+     * erc6551RegistryFacet: 0xd7178B120D93cd975737902d8c8e46D430eBd502, 
+     * attributesFacet: 0xcE6360CBE1d2E47734479E30a09Ffe0132a5C149, 
+     * dnaFacet: 0x14E66f0056b336a87Fd5Ae876a03b1a5fbdBDC66, 
+     * hooksFacet: 0x8A1B589729bC9e3F6C79940331EfC7a2bD83039d, 
+     * mockMarineFarmFacet: 0xaf04Cb9171772d4E2a974393734CA6BD009ea56B
      */
 
     function deploy(address owner) public returns (Deployment memory) {
@@ -140,7 +139,7 @@ contract Deploy is Script {
         bytes4[] memory selectors;
 
         if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("GotchipusFacet"))) {
-            selectors = new bytes4[](19);
+            selectors = new bytes4[](20);
             selectors[0] = GotchipusFacet.balanceOf.selector;
             selectors[1] = GotchipusFacet.ownerOf.selector;
             selectors[2] = GotchipusFacet.totalSupply.selector;
@@ -160,8 +159,9 @@ contract Deploy is Script {
             selectors[16] = GotchipusFacet.setBaseURI.selector;
             selectors[17] = GotchipusFacet.mint.selector;
             selectors[18] = GotchipusFacet.burn.selector;
+            selectors[19] = GotchipusFacet.testMint.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("ERC6551AccountFacet"))) {
-            selectors = new bytes4[](7);
+            selectors = new bytes4[](6);
             selectors[0] = ERC6551AccountFacet.state.selector;
             selectors[1] = ERC6551AccountFacet.accountOwner.selector;
             selectors[2] = ERC6551AccountFacet.token.selector;

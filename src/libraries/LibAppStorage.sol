@@ -74,12 +74,9 @@ struct AppStorage {
 
 
 library LibAppStorage {
-    bytes32 constant DIAMOND_APP_STORAGE_POSITION = keccak256("diamond.standard.app.storage");
-
     function diamondStorage() internal pure returns (AppStorage storage ds) {
-        bytes32 position = DIAMOND_APP_STORAGE_POSITION;
         assembly {
-            ds.slot := position
+            ds.slot := 0
         }
     }
 }

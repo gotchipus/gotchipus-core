@@ -5,7 +5,7 @@ import { Modifier, GotchipusInfo } from "../libraries/LibAppStorage.sol";
 
 contract AttributesFacet is Modifier {
     event SetName(string indexed newName);
-
+    
     function pet(uint256 gotchipusTokenId) external {
         require(uint256(s.lastPetTime[gotchipusTokenId]) + 1 days <= block.timestamp, "gotchipus already pet");
         s.lastPetTime[gotchipusTokenId] = uint32(block.timestamp);

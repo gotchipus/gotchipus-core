@@ -119,7 +119,7 @@ contract GotchipusFacet is Modifier {
         s.baseUri = _baseURI;
     }
 
-    function testMint() external onlyOwner {
+    function testMint() external {
         uint256 tokenId = s.nextTokenId;
         s.nextTokenId++;
         LibERC721._mint(msg.sender, tokenId);
