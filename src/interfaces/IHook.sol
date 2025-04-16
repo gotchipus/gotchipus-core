@@ -7,4 +7,11 @@ interface IHook {
         uint256 breedFish,
         bytes calldata data
     ) external returns (bool success, uint256 extraFish);
+
+    function beforeHarvest(
+        address user,
+        uint256 breedFish,
+        bytes calldata data
+    ) external returns (bool success, uint256 extraFish);
 }
+

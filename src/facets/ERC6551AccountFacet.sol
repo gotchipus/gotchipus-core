@@ -27,15 +27,15 @@ contract ERC6551AccountFacet is Modifier, IERC165, IERC1271, IERC6551Account, IE
         return abi.decode(footer, (uint256, address, uint256));
     }
 
-    function owner() public view virtual returns (address) {
+    function accountOwner() public view virtual returns (address) {
         (uint256 chainId, , uint256 tokenId) = token();
         if (chainId != block.chainid) return address(0);
 
-        return s.pharosInfoMap.tokenOwners[tokenId];
+        return s.tokenOwners[tokenId];
     }
 
     function _isValidSigner(address signer) internal view virtual returns (bool) {
-        return signer == owner();
+        return signer == accountOwner();
     }
 
     function isValidSigner(address signer, bytes calldata) external view virtual returns (bytes4) {
@@ -52,7 +52,7 @@ contract ERC6551AccountFacet is Modifier, IERC165, IERC1271, IERC6551Account, IE
         virtual
         returns (bytes4 magicValue)
     {
-        bool isValid = SignatureChecker.isValidSignatureNow(owner(), hash, signature);
+        bool isValid = SignatureChecker.isValidSignatureNow(accountOwner(), hash, signature);
 
         if (isValid) {
             return IERC1271.isValidSignature.selector;

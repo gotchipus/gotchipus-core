@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { AppStorage, Modifier } from "../libraries/LibAppStorage.sol";
+import { AppStorage, Modifier, GotchipusInfo } from "../libraries/LibAppStorage.sol";
 import { IERC721Receiver } from "../interfaces/IERC721Receiver.sol";
 import { IERC721Enumerable } from "../interfaces/IERC721Enumerable.sol";
 import { IERC721 } from "../interfaces/IERC721.sol";
@@ -9,8 +9,24 @@ import { LibMeta } from "../libraries/LibMeta.sol";
 import { LibERC721 } from "../libraries/LibERC721.sol";
 import { LibStrings } from "../libraries/LibStrings.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
+import { LibDna } from "../libraries/LibDna.sol";
+import { LibTime } from "../libraries/LibTime.sol";
+import { LibTransferHelper } from "../libraries/LibTransferHepler.sol";
+import { IGotchipusFacet } from "../interfaces/IGotchipusFacet.sol";
+import { IERC6551RegistryFacet } from "../interfaces/IERC6551RegistryFacet.sol";
 
 contract GotchipusFacet is Modifier {
+    uint256 constant PHAROS_PRICE = 0.04 ether;
+    uint256 constant MAX_TOTAL_SUPPLY = 20000;
+
+    struct SummonArgs {
+        uint256 gotchipusTokenId;
+        string pusName;
+        address collateralToken;
+        uint256 stakeAmount;
+        uint8 utc;
+    }
+
     function balanceOf(address _owner) external view returns (uint256) {
         require(_owner != address(0), "GotchipusFacet: owner can't is zero");
         return s.balances[_owner];
@@ -103,10 +119,92 @@ contract GotchipusFacet is Modifier {
         s.baseUri = _baseURI;
     }
 
-    function mint(address to, uint256 tokenId) external onlyOwner {
-        LibERC721._mint(to, tokenId);
+    function testMint() external onlyOwner {
+        uint256 tokenId = s.nextTokenId;
+        s.nextTokenId++;
+        LibERC721._mint(msg.sender, tokenId);
     }
 
+    function mint(uint256 amount) external payable pharosMintIsPaused {
+        bool isWhitelist = s.isWhitelist[msg.sender];
+        uint256 tokenId = s.nextTokenId;
+        require(tokenId + 1 <= MAX_TOTAL_SUPPLY, "MAX TOTAL SUPPLY");
+        s.nextTokenId++;
+
+        if (isWhitelist) {
+            LibERC721._mint(msg.sender, tokenId);
+        } else {
+            require(amount * PHAROS_PRICE == msg.value, "Invalid value");
+            LibERC721._mint(msg.sender, tokenId);
+        }
+    }
+
+    function summonGotchipus(SummonArgs calldata _args) external payable onlyPharosOwner(_args.gotchipusTokenId) {
+        require(s.accountOwnedByTokenId[_args.gotchipusTokenId] == address(0), "Pharos: already summon");
+
+        LibERC721._burn(_args.gotchipusTokenId);
+        
+        bytes32 salt = keccak256(abi.encode(block.chainid, _args.gotchipusTokenId, address(this)));
+        address account = erc6551RegistryFacet().createAccount(
+            address(this),
+            salt,
+            block.chainid,
+            address(this),
+            _args.gotchipusTokenId
+        );
+        
+        if (_args.collateralToken == address(0)) {
+            LibTransferHelper.safeTransferETH(account, _args.stakeAmount);
+        } else {
+            LibTransferHelper.safeTransferFrom(_args.collateralToken, msg.sender, account, _args.stakeAmount);
+        }
+
+        uint256 randomDna = LibDna.getRandomGene(salt);
+        GotchipusInfo storage _ownedPus = s.ownedGotchipusInfos[msg.sender][_args.gotchipusTokenId];
+        _ownedPus.dna.geneSeed = randomDna;
+        _ownedPus.dna.ruleVersion = s.dnaRuleVersion;
+        _ownedPus.tokenId = _args.gotchipusTokenId;
+        _ownedPus.name = _args.pusName;
+        _ownedPus.uri = LibStrings.strWithUint("https://gotchipus.com/metadata/gotchipus/", _args.gotchipusTokenId);
+        _ownedPus.owner = msg.sender;
+        _ownedPus.collateral = _args.collateralToken;
+        _ownedPus.epoch = uint32(block.timestamp);
+        _ownedPus.utc = _args.utc;
+        _ownedPus.bonding = 50;
+        _ownedPus.aether = _getStableAether(_args.stakeAmount);
+        _ownedPus.singer = msg.sender;
+        _ownedPus.status = 1;
+        s.accountOwnedByTokenId[_args.gotchipusTokenId] = account;
+    }
+
+    function addWhitelist(address[] calldata _whitelists, bool[] calldata _isWhitelists) external onlyOwner {
+        for (uint256 i = 0; i < _whitelists.length; i++) {
+            s.isWhitelist[_whitelists[i]] = _isWhitelists[i];
+        }
+    }
+
+    function paused(bool _paused) external onlyOwner {
+        s.isPaused = _paused;
+    }
+
+    function erc6551RegistryFacet() internal view returns (IERC6551RegistryFacet) {
+        return IERC6551RegistryFacet(address(this));
+    }
+
+    function _getStableAether(uint256 stakeAmount) internal pure returns (uint32) {
+        uint256 formatAmount = stakeAmount / 10**18;
+        if (formatAmount >= 1000) {
+             return 100;
+        } else if (formatAmount >= 500) { 
+            return 75; 
+        } else if (formatAmount >= 250) {
+            return 50;
+        } else if (formatAmount >= 100) {
+            return 25;
+        } else {
+            return 10;
+        }
+    }
 
     function burn(uint256 tokenId) external {
         require(LibERC721._isApprovedOrOwner(LibMeta.msgSender(), tokenId), 

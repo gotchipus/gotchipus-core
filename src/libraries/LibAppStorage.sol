@@ -14,7 +14,7 @@ struct GotchipusInfo {
     address collateral;
     uint256 collateralAmount;
     uint256 level;
-    uint8 status;
+    uint8 status; // 0 = pharos, 1 = summon
     uint8 evolution;
     bool locked;
     uint32 epoch;
@@ -28,24 +28,6 @@ struct GotchipusInfo {
     // erc6551 info
     address singer;
     uint256 nonces;
-}
-
-struct PharosInfo {
-    string name;
-    string symbol;
-    string baseUri;
-    mapping(uint256 => address) tokenOwners;
-    mapping(address => uint256) balances;
-    mapping(uint256 => address) tokenApprovals;
-    mapping(address => mapping(address => bool)) operatorApprovals;
-    mapping(uint256 => string) tokenURIs;
-    uint256 nextTokenId;
-    uint256[] allTokens;
-    mapping(uint256 => uint256) allTokensIndex;
-    mapping(address => uint256[]) ownerTokens;
-    mapping(uint256 => uint256) ownedTokensIndex;
-    mapping(address => bool) isWhitelist;
-    bool isPaused;
 }
 
 struct DNAData {
@@ -67,8 +49,9 @@ struct AppStorage {
     mapping(uint256 => uint256) allTokensIndex;
     mapping(address => uint256[]) ownerTokens;
     mapping(uint256 => uint256) ownedTokensIndex;
+    mapping(address => bool) isWhitelist;
+    bool isPaused;
     mapping(address => mapping(uint256 => GotchipusInfo)) ownedGotchipusInfos;
-    PharosInfo pharosInfoMap;
     uint32 createWorldTime;
     uint8 createTimeForTimeHour;
     // action
@@ -115,12 +98,12 @@ contract Modifier {
     }
 
     modifier pharosMintIsPaused() {
-        require(!s.pharosInfoMap.isPaused, "LibAppStorage: mint paused");
+        require(!s.isPaused, "LibAppStorage: mint paused");
         _;
     }
 
     modifier onlyPharosOwner(uint256 _tokenId) {
-        require(LibMeta.msgSender() == s.pharosInfoMap.tokenOwners[_tokenId], "LibAppStorage: Only pharos owner");
+        require(LibMeta.msgSender() == s.tokenOwners[_tokenId], "LibAppStorage: Only pharos owner");
         _;
     }
 }

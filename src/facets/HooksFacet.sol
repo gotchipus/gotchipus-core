@@ -3,7 +3,7 @@ pragma solidity ^0.8.29;
 
 import { Modifier } from "../libraries/LibAppStorage.sol";
 
-contract HookFacet is Modifier {
+contract HooksFacet is Modifier {
     function addHook(address hook) external {
         s.accountHooks[msg.sender].push(hook);
     }

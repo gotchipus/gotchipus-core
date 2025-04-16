@@ -12,7 +12,7 @@ contract MockMarineFarmFacet is Modifier {
         return true;
     }
 
-    function Breed(uint256 amount) external returns (bool) {
+    function breed(uint256 amount) external returns (bool) {
         s.ownedFish[msg.sender] -= amount;
         s.breedFish[msg.sender] += amount;
         return true;
