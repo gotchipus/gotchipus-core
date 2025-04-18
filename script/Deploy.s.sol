@@ -39,6 +39,7 @@ contract Deploy is Script {
 
     /** 
      * Pharos devnet
+     * create2Factory: 0xB06b5aAe2315976d44898FfC0C9A022e1F94Db7D
      * diamond: 0x5E44AcE44aEEA600497e764a6Acd2ce4CdcbF95A, 
      * initDiamond: 0x28e3350B608E4bcFE0f654Bd3e288E20D94A8382, 
      * diamondCutFacet: 0xfb6CF9f914c76ccDc3Fc722b5c0D3EFa5C4F7DFA, 
