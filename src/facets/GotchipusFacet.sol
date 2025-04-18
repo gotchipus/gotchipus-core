@@ -141,8 +141,6 @@ contract GotchipusFacet is Modifier {
 
     function summonGotchipus(SummonArgs calldata _args) external payable onlyPharosOwner(_args.gotchipusTokenId) {
         require(s.accountOwnedByTokenId[_args.gotchipusTokenId] == address(0), "Pharos: already summon");
-
-        LibERC721._burn(_args.gotchipusTokenId);
         
         bytes32 salt = keccak256(abi.encode(block.chainid, _args.gotchipusTokenId, address(this)));
         address account = erc6551RegistryFacet().createAccount(
@@ -175,6 +173,9 @@ contract GotchipusFacet is Modifier {
         _ownedPus.singer = msg.sender;
         _ownedPus.status = 1;
         s.accountOwnedByTokenId[_args.gotchipusTokenId] = account;
+        
+        uint256 packed = LibDna.computePacked(_args.gotchipusTokenId);
+        LibDna.setPacked(_args.gotchipusTokenId, packed);
     }
 
     function addWhitelist(address[] calldata _whitelists, bool[] calldata _isWhitelists) external onlyOwner {

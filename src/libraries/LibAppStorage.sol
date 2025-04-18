@@ -35,6 +35,11 @@ struct DNAData {
     uint8 ruleVersion;
 }
 
+struct TraitsOffset {
+    uint8 offset;
+    uint8 width;
+}
+
 struct AppStorage {
     string name;
     string symbol;
@@ -62,6 +67,8 @@ struct AppStorage {
     uint256 state;
     // DNA
     uint8 dnaRuleVersion;
+    TraitsOffset[] traitsOffset; 
+    mapping(uint256 => uint256) tokenTraitsPacked;
 
     // Mock farm 
     mapping(address => uint256) ownedFish;

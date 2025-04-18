@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { AppStorage } from "./libraries/LibAppStorage.sol";
+import { AppStorage, TraitsOffset } from "./libraries/LibAppStorage.sol";
 import { LibDiamond } from "./libraries/LibDiamond.sol";
 import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
 import { IDiamondLoupe } from  "./interfaces/IDiamondLoupe.sol";
@@ -17,6 +17,7 @@ contract InitDiamond {
         string symbol;
         string baseUri;
         uint8 createUtcHour;
+        TraitsOffset[] traitsOffset;
     }
 
 
@@ -26,7 +27,8 @@ contract InitDiamond {
         s.baseUri = _args.baseUri;
         s.createWorldTime = uint32(block.timestamp);
         s.createTimeForTimeHour = _args.createUtcHour;
-        
+        s.traitsOffset = _args.traitsOffset;
+
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         // erc165
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;

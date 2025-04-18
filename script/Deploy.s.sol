@@ -15,6 +15,7 @@ import { DNAFacet } from "../src/facets/DNAFacet.sol";
 import { HooksFacet } from "../src/facets/HooksFacet.sol";
 import { MockMarineFarmFacet } from "../src/facets/MockMarineFarmFacet.sol";
 import { IDiamondCut } from "../src/interfaces/IDiamondCut.sol";
+import { TraitsOffset } from "../src/libraries/LibAppStorage.sol";
 
 
 contract Deploy is Script {
@@ -39,7 +40,7 @@ contract Deploy is Script {
 
     /** 
      * Pharos devnet
-     * create2Factory: 0xB06b5aAe2315976d44898FfC0C9A022e1F94Db7D
+     * create2Factory: 0x000000f2529cafe47f13bc4d674e343a97a870c1
      * diamond: 0x5E44AcE44aEEA600497e764a6Acd2ce4CdcbF95A, 
      * initDiamond: 0x28e3350B608E4bcFE0f654Bd3e288E20D94A8382, 
      * diamondCutFacet: 0xfb6CF9f914c76ccDc3Fc722b5c0D3EFa5C4F7DFA, 
@@ -112,7 +113,8 @@ contract Deploy is Script {
             name: "GotchipusNFT",
             symbol: "GTP",
             baseUri: "https://gotchipus.com/metadata/",
-            createUtcHour: 0
+            createUtcHour: 0,
+            traitsOffset: getTraitsOffset()
         });
         bytes memory initCalldata = abi.encodeWithSelector(InitDiamond.init.selector, initArgs);
 
@@ -134,6 +136,23 @@ contract Deploy is Script {
             hooksFacet: hooksFacet,
             mockMarineFarmFacet: mockMarineFarmFacet
         });
+    }
+
+    function getTraitsOffset() internal pure returns (TraitsOffset[] memory) {
+        uint256 traitsNumber = 26;
+        TraitsOffset[] memory traitsOffset = new TraitsOffset[](traitsNumber);
+        uint8[26] memory widths = [uint8(3), 1, 4, 4, 1, 4, 1, 4, 1, 4, 4, 1, 4, 4, 1, 4, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4];
+        uint8 offset = 0;
+
+        for (uint256 i = 0; i < traitsNumber; i++) {
+            traitsOffset[i] = TraitsOffset({
+                offset: offset,
+                width: widths[i]
+            });
+            offset += widths[i];
+        }
+
+        return traitsOffset;
     }
 
     function getSelectors(string memory facetName) internal pure returns (bytes4[] memory) {
