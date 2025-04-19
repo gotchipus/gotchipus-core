@@ -41,7 +41,7 @@ contract Deploy is Script {
     /** 
      * Pharos devnet
      * create2Factory: 0x000000f2529cafe47f13bc4d674e343a97a870c1
-     * diamond: 0x5E44AcE44aEEA600497e764a6Acd2ce4CdcbF95A, 
+     * diamond: 0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8, 
      * initDiamond: 0x28e3350B608E4bcFE0f654Bd3e288E20D94A8382, 
      * diamondCutFacet: 0xfb6CF9f914c76ccDc3Fc722b5c0D3EFa5C4F7DFA, 
      * diamondLoupeFacet: 0xd87AC654aA730ca72681a3Aa29898a8F0ae0dd57, 
@@ -58,9 +58,12 @@ contract Deploy is Script {
     function deploy(address owner) public returns (Deployment memory) {
         vm.startBroadcast();
 
-        DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
-        DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet();
-        OwnershipFacet ownershipFacet = new OwnershipFacet();
+        // DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
+        // DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet();
+        // OwnershipFacet ownershipFacet = new OwnershipFacet();
+        DiamondCutFacet diamondCutFacet = DiamondCutFacet(0xfb6CF9f914c76ccDc3Fc722b5c0D3EFa5C4F7DFA);
+        DiamondLoupeFacet diamondLoupeFacet = DiamondLoupeFacet(0xd87AC654aA730ca72681a3Aa29898a8F0ae0dd57);
+        OwnershipFacet ownershipFacet = OwnershipFacet(0x705F094215317bAe890b78d1b374E66caa052c12);
         InitDiamond initDiamond = new InitDiamond();
         GotchipusFacet gotchipusFacet = new GotchipusFacet();
         ERC6551AccountFacet erc6551AccountFacet = new ERC6551AccountFacet();
@@ -70,8 +73,8 @@ contract Deploy is Script {
         HooksFacet hooksFacet = new HooksFacet();
         MockMarineFarmFacet mockMarineFarmFacet = new MockMarineFarmFacet();
 
-        Diamond diamond = new Diamond(owner, address(diamondCutFacet), address(diamondLoupeFacet), address(ownershipFacet));
-
+        // Diamond diamond = new Diamond(owner, address(diamondCutFacet), address(diamondLoupeFacet), address(ownershipFacet));
+        Diamond diamond = Diamond(payable(0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8));
         IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](7);
         facetCuts[0] = IDiamondCut.FacetCut({
             facetAddress: address(mockMarineFarmFacet),

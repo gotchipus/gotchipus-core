@@ -40,6 +40,12 @@ struct TraitsOffset {
     uint8 width;
 }
 
+struct SvgLayer {
+    address svgLayerContract;
+    uint16 offset;
+    uint16 size;
+}
+
 struct AppStorage {
     string name;
     string symbol;
@@ -77,6 +83,9 @@ struct AppStorage {
     // Hooks
     // address can owned multiple hooks
     mapping(address => address[]) accountHooks;
+
+    // traits svg
+    mapping(bytes32 => SvgLayer[]) svgLayers;
 }
 
 

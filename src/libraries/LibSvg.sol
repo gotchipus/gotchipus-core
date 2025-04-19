@@ -1,0 +1,93 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.29;
+
+import { LibAppStorage, AppStorage, SvgLayer } from "./LibAppStorage.sol";
+import { LibStrings } from "./LibStrings.sol";
+
+library LibSvg {
+    uint256 internal constant MAX_SIZE = 24_576;
+
+    event StoreSvg(SvgTypeAndSizes[] typeAndSizes);
+
+    struct SvgTypeAndSizes {
+        bytes32 svgType;
+        uint256[] sizes;
+    }
+
+    function readSvg(address svgContract) internal view returns (bytes memory svg) {
+        assembly {
+            let size := extcodesize(svgContract)
+            if iszero(size) {
+                mstore(0x00, 0x20)
+                mstore(0x20, 18)
+                mstore(0x40, "LibSvg: empty code")
+                revert(0x00, 0x52)
+            }
+
+            svg := mload(0x40)
+            mstore(svg, size)
+            extcodecopy(svgContract, add(svg, 32), 0, size)
+            mstore(0x40, add(add(svg, 32), add(add(size, 31), not(31))))
+        }
+    }
+
+    function storeSvgInContract(bytes memory svg) internal returns (address svgContract) {
+        assembly {
+            let len := mload(svg)
+            if iszero(lt(len, MAX_SIZE)) {
+                mstore(0x00, 0x20)
+                mstore(0x20, 30)
+                mstore(0x40, "LibSvg: Exceeded contract size")
+                revert(0x00, 0x5e)
+            }
+
+            let total := add(len, 14)
+            let code := mload(0x40)
+            mstore(0x40, add(code, and(and(total, 0x1f), not(0x1f))))
+
+            /**
+             * push 14 bytes header
+             * 0: 61 LL HH      PUSH2 len
+             * 3: 60 0e         PUSH1 0x0e (runtime offset)
+             * 5: 60 00         PUSH1 0x00 (mem pos)
+             * 7: 39            CODECOPY
+             * 8: 61 LL HH      PUSH2 len
+             * 11: 60 00        PUSH1 0x00
+             * 13: f3           RETURN
+             */
+            // PUSH2 len
+            mstore8(code, 0x61)                     // 0
+            mstore8(add(code, 1), shr(8, len))      // 1: len high
+            mstore8(add(code, 2), and(len, 0xff))   // 2: len low
+            // PUSH1 0x0e
+            mstore8(add(code, 3), 0x60)
+            mstore8(add(code, 4), 0x0e)
+            // PUSH1 0x00
+            mstore8(add(code, 5), 0x60)
+            mstore8(add(code, 6), 0x00)
+            // CODECOPY
+            mstore8(add(code, 7), 0x39)
+            // PUSH2 len
+            mstore8(add(code, 8), 0x61)
+            mstore8(add(code, 9), shr(8, len))
+            mstore8(add(code, 10), and(len, 0xff))
+            // PUSH1 0x00
+            mstore8(add(code, 11), 0x60)
+            mstore8(add(code, 12), 0x00)
+            // RETURN
+            mstore8(add(code, 13), 0xf3)
+
+            let src := add(svg, 32)
+            let dst := add(code, 14)
+            for { let off := 0 } lt(off, len) { off := add(off, 32)} {
+                mstore(add(dst, off), mload(add(src, off)))
+            }
+            
+            svgContract := create(0, code, total)
+            if iszero(svgContract) {
+                returndatacopy(0, 0, returndatasize())
+                revert(0, returndatasize())
+            }
+        }
+    }
+}
