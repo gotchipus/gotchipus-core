@@ -7,11 +7,11 @@ import { LibStrings } from "./LibStrings.sol";
 library LibSvg {
     uint256 internal constant MAX_SIZE = 24_576;
 
-    event StoreSvg(SvgTypeAndSizes[] typeAndSizes);
+    event StoreSvg(SvgItem[] items);
 
-    struct SvgTypeAndSizes {
+    struct SvgItem {
         bytes32 svgType;
-        uint256[] sizes;
+        uint256 size;
     }
 
     function readSvg(address svgContract) internal view returns (bytes memory svg) {
@@ -28,6 +28,27 @@ library LibSvg {
             mstore(svg, size)
             extcodecopy(svgContract, add(svg, 32), 0, size)
             mstore(0x40, add(add(svg, 32), add(add(size, 31), not(31))))
+        }
+    }
+
+    function sliceSvg(bytes32 svgType, uint256 id) internal view returns (bytes memory svg) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        SvgLayer[] storage svgLayers = s.svgLayers[svgType];
+        svg = sliceSvg(svgLayers, id);
+    }
+
+    function sliceSvg(SvgLayer[] storage svgLayers, uint256 id) internal view returns (bytes memory svg) {
+        SvgLayer storage svgLayer = svgLayers[id];
+        address svgContract = svgLayer.svgLayerContract;
+        uint256 offset = svgLayer.offset;
+        uint256 size = svgLayer.size;
+
+        assembly {
+            svg := mload(0x40)
+            mstore(svg, size)
+            let dataPtr := add(svg, 32)
+            extcodecopy(svgContract, dataPtr, offset, size)
+            mstore(0x40, add(dataPtr, and(add(size, 31), not(31))))
         }
     }
 
@@ -89,5 +110,18 @@ library LibSvg {
                 revert(0, returndatasize())
             }
         }
+    }
+
+    function storeSvg(bytes calldata svg, SvgItem[] calldata svgItems) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        address svgContract = storeSvgInContract(svg);
+        uint256 offset;
+
+        for (uint256 i = 0; i < svgItems.length; i++) {
+            SvgItem calldata item = svgItems[i];
+            s.svgLayers[item.svgType].push(SvgLayer(svgContract, uint16(offset), uint16(item.size)));
+            offset += item.size;
+        }
+        emit StoreSvg(svgItems);
     }
 }

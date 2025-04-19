@@ -35,6 +35,27 @@ library LibStrings {
         return string(abi.encodePacked(_str, buffer));
     }
 
+    function bytes32ToString(bytes32 data) internal pure returns (string memory str) {
+        assembly {
+            let len := 0
+            for { } lt(len, 32) { len := add(len, 1) } {
+                if iszero(byte(len, data)) { break }
+            }
+
+            str := mload(0x40)
+            mstore(str, len)
+            mstore(0x40, add(add(str, 32), add(add(len, 31), not(31))))
+
+            let src := data
+            let dest := add(str, 32)
+            mstore(dest, src)
+
+            if lt(len, 32) {
+                mstore(add(dest, len), 0)
+            }
+        }
+    }
+
     function uint2str(uint256 _i) internal pure returns (string memory) {
         if (_i == 0) {
             return "0";
