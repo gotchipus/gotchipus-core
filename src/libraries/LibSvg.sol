@@ -8,6 +8,7 @@ library LibSvg {
     uint256 internal constant MAX_SIZE = 24_576;
 
     event StoreSvg(SvgItem[] items);
+    event UpdateSvg(SvgItem[] items);
 
     struct SvgItem {
         bytes32 svgType;
@@ -123,5 +124,18 @@ library LibSvg {
             offset += item.size;
         }
         emit StoreSvg(svgItems);
+    }
+
+    function updateSvg(bytes calldata svg, SvgItem[] calldata svgItems) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        address svgContract = storeSvgInContract(svg);
+        uint256 offset;
+
+        for (uint256 i = 0; i < svgItems.length; i++) {
+            SvgItem calldata item = svgItems[i];
+            s.svgLayers[item.svgType].push(SvgLayer(svgContract, uint16(offset), uint16(item.size)));
+            offset += item.size;
+        }
+        emit UpdateSvg(svgItems);
     }
 }

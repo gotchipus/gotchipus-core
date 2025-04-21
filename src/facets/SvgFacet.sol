@@ -26,4 +26,8 @@ contract SvgFacet is Modifier {
     function storeSvg(bytes calldata svg, LibSvg.SvgItem[] calldata svgItems) external onlyOwner {
         LibSvg.storeSvg(svg, svgItems);
     }
+
+    function updateSvg(bytes calldata svg, LibSvg.SvgItem[] calldata svgItems) external onlyOwner {
+        LibSvg.updateSvg(svg, svgItems);
+    }
 }
