@@ -46,6 +46,11 @@ struct SvgLayer {
     uint16 size;
 }
 
+struct Permissions {
+    bool beforePet;
+    bool afterPet;
+}
+
 struct AppStorage {
     string name;
     string symbol;
@@ -83,6 +88,7 @@ struct AppStorage {
     // Hooks
     // address can owned multiple hooks
     mapping(address => address[]) accountHooks;
+    mapping(address => mapping(address => bool)) isValidHook;
 
     // traits svg
     mapping(bytes32 => SvgLayer[]) svgLayers;
