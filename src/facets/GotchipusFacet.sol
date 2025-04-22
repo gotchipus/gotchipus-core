@@ -63,7 +63,11 @@ contract GotchipusFacet is Modifier {
         return s.symbol;
     }
 
-    function tokenURI(uint256 _tokenId) external pure returns (string memory) {
+    function tokenURI(uint256 _tokenId) external view returns (string memory) {
+        GotchipusInfo storage _ownedPus = s.ownedGotchipusInfos[s.tokenOwners[_tokenId]][_tokenId];
+        if (_ownedPus.status == 0) {
+            return LibStrings.strWithUint("https://gotchipus.com/metadata/pharos/", _tokenId);
+        }
         return LibStrings.strWithUint("https://gotchipus.com/metadata/gotchipus/", _tokenId);
     }
 
@@ -213,16 +217,8 @@ contract GotchipusFacet is Modifier {
         LibERC721._burn(tokenId);
     }
 
-
     function _safeTransfer(address _from, address _to, uint256 _tokenId, bytes memory _data) internal {
         LibERC721._transfer(_from, _to, _tokenId);
         require(LibERC721._checkOnERC721Received(_from, _to, _tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
-    }
-
-    function _safeMint(address to) internal returns (uint256) {
-        uint256 tokenId = s.nextTokenId;
-        s.nextTokenId++;
-        LibERC721._mint(to, tokenId);
-        return tokenId;
     }
 }
