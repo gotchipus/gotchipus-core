@@ -8,3 +8,6 @@ docs/
 
 # Dotenv file
 .env
+
+# mac
+.DS_Store

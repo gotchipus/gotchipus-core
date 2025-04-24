@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.29;
 
-import { Test } from "forge-std/Test.sol";
-import { GotchipusFacet } from "../../src/facets/GotchipusFacet.sol";
+import "../utils/DiamondFixture.sol";
+import { IERC721Metadata } from "../../src/interfaces/IERC721Metadata.sol";
 
-contract GotchipusFacetTest is Test {
-    GotchipusFacet gotchipusFacet;
+contract GotchipusFacetTest is DiamondFixture {
+    function testGetName() public {
+        IERC721Metadata gotchi = IERC721Metadata(address(diamond));
 
-    function setUp() public {
-        gotchipusFacet = new GotchipusFacet();
+        string memory name = gotchi.name();
+        assertEq(name, "GotchipusNFT");
     }
 }
