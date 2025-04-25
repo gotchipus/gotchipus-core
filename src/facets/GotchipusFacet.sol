@@ -13,7 +13,7 @@ import { LibDna } from "../libraries/LibDna.sol";
 import { LibTime } from "../libraries/LibTime.sol";
 import { LibTransferHelper } from "../libraries/LibTransferHepler.sol";
 import { IGotchipusFacet } from "../interfaces/IGotchipusFacet.sol";
-import { IERC6551RegistryFacet } from "../interfaces/IERC6551RegistryFacet.sol";
+import { IERC6551Registry } from "../interfaces/IERC6551Registry.sol";
 
 contract GotchipusFacet is Modifier {
     uint256 constant PHAROS_PRICE = 0.04 ether;
@@ -123,13 +123,8 @@ contract GotchipusFacet is Modifier {
         s.baseUri = _baseURI;
     }
 
-    function testMint() external {
-        uint256 tokenId = s.nextTokenId;
-        s.nextTokenId++;
-        LibERC721._mint(msg.sender, tokenId);
-    }
-
     function mint(uint256 amount) external payable pharosMintIsPaused {
+        require(amount != 0, "Invalid amount");
         bool isWhitelist = s.isWhitelist[msg.sender];
         uint256 tokenId = s.nextTokenId;
         require(tokenId + 1 <= MAX_TOTAL_SUPPLY, "MAX TOTAL SUPPLY");
@@ -147,14 +142,14 @@ contract GotchipusFacet is Modifier {
         require(s.accountOwnedByTokenId[_args.gotchipusTokenId] == address(0), "Pharos: already summon");
         
         bytes32 salt = keccak256(abi.encode(block.chainid, _args.gotchipusTokenId, address(this)));
-        address account = erc6551RegistryFacet().createAccount(
-            address(this),
+        address account = IERC6551Registry(s.erc6551Registry).createAccount(
+            s.erc6551Implementation,
             salt,
             block.chainid,
             address(this),
             _args.gotchipusTokenId
         );
-        
+
         if (_args.collateralToken == address(0)) {
             LibTransferHelper.safeTransferETH(account, _args.stakeAmount);
         } else {
@@ -177,7 +172,7 @@ contract GotchipusFacet is Modifier {
         _ownedPus.singer = msg.sender;
         _ownedPus.status = 1;
         s.accountOwnedByTokenId[_args.gotchipusTokenId] = account;
-        
+
         uint256 packed = LibDna.computePacked(_args.gotchipusTokenId);
         LibDna.setPacked(_args.gotchipusTokenId, packed);
     }
@@ -190,10 +185,6 @@ contract GotchipusFacet is Modifier {
 
     function paused(bool _paused) external onlyOwner {
         s.isPaused = _paused;
-    }
-
-    function erc6551RegistryFacet() internal view returns (IERC6551RegistryFacet) {
-        return IERC6551RegistryFacet(address(this));
     }
 
     function _getStableAether(uint256 stakeAmount) internal pure returns (uint32) {

@@ -54,4 +54,6 @@ interface IERC6551Account {
         external
         view
         returns (bytes4 magicValue);
+
+    function owner() external view returns (address);
 }

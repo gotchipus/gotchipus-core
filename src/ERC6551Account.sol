@@ -1,21 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { Modifier } from "../libraries/LibAppStorage.sol";
-import { IERC6551Account } from "../interfaces/IERC6551Account.sol";
-import { IERC6551Executable } from "../interfaces/IERC6551Executable.sol";
+import { IERC6551Account } from "../src/interfaces/IERC6551Account.sol";
+import { IERC6551Executable } from "../src/interfaces/IERC6551Executable.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
 
-contract ERC6551AccountFacet is Modifier, IERC165, IERC1271, IERC6551Account, IERC6551Executable {
+contract ERC6551Account is IERC165, IERC1271, IERC6551Account, IERC6551Executable {
+    uint256 public state;
     receive() external payable override {}
-
-    function state() public view virtual returns (uint256) {
-        return s.state;
-    }
 
     function token() public view virtual returns (uint256, address, uint256) {
         bytes memory footer = new bytes(0x60);
@@ -27,15 +23,15 @@ contract ERC6551AccountFacet is Modifier, IERC165, IERC1271, IERC6551Account, IE
         return abi.decode(footer, (uint256, address, uint256));
     }
 
-    function accountOwner() public view virtual returns (address) {
-        (uint256 chainId, , uint256 tokenId) = token();
+    function owner() public view virtual returns (address) {
+        (uint256 chainId, address tokenContract, uint256 tokenId) = token();
         if (chainId != block.chainid) return address(0);
 
-        return s.tokenOwners[tokenId];
+        return IERC721(tokenContract).ownerOf(tokenId);
     }
 
     function _isValidSigner(address signer) internal view virtual returns (bool) {
-        return signer == accountOwner();
+        return signer == owner();
     }
 
     function isValidSigner(address signer, bytes calldata) external view virtual returns (bytes4) {
@@ -52,7 +48,7 @@ contract ERC6551AccountFacet is Modifier, IERC165, IERC1271, IERC6551Account, IE
         virtual
         returns (bytes4 magicValue)
     {
-        bool isValid = SignatureChecker.isValidSignatureNow(accountOwner(), hash, signature);
+        bool isValid = SignatureChecker.isValidSignatureNow(owner(), hash, signature);
 
         if (isValid) {
             return IERC1271.isValidSignature.selector;
@@ -76,7 +72,7 @@ contract ERC6551AccountFacet is Modifier, IERC165, IERC1271, IERC6551Account, IE
         require(_isValidSigner(msg.sender), "Invalid signer");
         require(operation == 0, "Only call operations are supported");
 
-        ++s.state;
+        ++state;
 
         bool success;
         (success, result) = to.call{value: value}(data);

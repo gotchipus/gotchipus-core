@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-library LibERC6551Registry {
+import { IERC6551Registry } from "../src/interfaces/IERC6551Registry.sol";
+
+contract ERC6551Registry is IERC6551Registry {
     function createAccount(
         address implementation,
         bytes32 salt,
         uint256 chainId,
         address tokenContract,
         uint256 tokenId
-    ) internal returns (address newAccount) {
+    ) external returns (address) {
         assembly {
             // Memory Layout:
             // ----
@@ -67,11 +69,14 @@ library LibERC6551Registry {
                     tokenContract,
                     tokenId
                 )
-                mstore(0x00, deployed)
-            } 
 
+                // Return the account address
+                return(0x6c, 0x20)
+            }
+
+            // Otherwise, return the computed account address
             mstore(0x00, shr(96, shl(96, computed)))
-            newAccount := mload(0x00)
+            return(0x00, 0x20)
         }
     }
 
@@ -81,7 +86,7 @@ library LibERC6551Registry {
         uint256 chainId,
         address tokenContract,
         uint256 tokenId
-    ) internal view returns (address computedAccount) {
+    ) external view returns (address) {
         assembly {
             // Silence unused variable warnings
             pop(chainId)
@@ -102,7 +107,9 @@ library LibERC6551Registry {
 
             // Store computed account address in memory
             mstore(0x00, shr(96, shl(96, keccak256(0x00, 0x55))))
-            computedAccount := mload(0x00)
+
+            // Return computed account address
+            return(0x00, 0x20)
         }
     }
 }

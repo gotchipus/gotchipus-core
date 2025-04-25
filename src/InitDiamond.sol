@@ -18,6 +18,8 @@ contract InitDiamond {
         string baseUri;
         uint8 createUtcHour;
         TraitsOffset[] traitsOffset;
+        address erc6551Registry;
+        address erc6551AccountImplementation;
     }
 
 
@@ -28,6 +30,8 @@ contract InitDiamond {
         s.createWorldTime = uint32(block.timestamp);
         s.createTimeForTimeHour = _args.createUtcHour;
         s.traitsOffset = _args.traitsOffset;
+        s.erc6551Registry = _args.erc6551Registry;
+        s.erc6551Implementation = _args.erc6551AccountImplementation;
 
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         // erc165

@@ -92,6 +92,10 @@ struct AppStorage {
 
     // traits svg
     mapping(bytes32 => SvgLayer[]) svgLayers;
+
+    // ext contract
+    address erc6551Registry;
+    address erc6551Implementation;
 }
 
 
