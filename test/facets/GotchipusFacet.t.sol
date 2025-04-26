@@ -54,6 +54,7 @@ contract GotchipusFacetTest is DiamondFixture {
         IERC6551Account account = IERC6551Account(payable(erc6551.account(0)));
         address owner = account.owner();
         assertEq(owner, address(1));
+        assertEq(address(account).balance, 0.1 ether);
 
         vm.stopPrank();
     }

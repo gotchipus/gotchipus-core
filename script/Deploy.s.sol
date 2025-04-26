@@ -16,6 +16,7 @@ import { IDiamondCut } from "../src/interfaces/IDiamondCut.sol";
 import { TraitsOffset } from "../src/libraries/LibAppStorage.sol";
 import { ERC6551Registry } from "../src/ERC6551Registry.sol";
 import { ERC6551Account } from "../src/ERC6551Account.sol";
+import { ERC6551Facet } from "../../src/facets/ERC6551Facet.sol";
 
 contract Deploy is Script {
     struct Deployment {
@@ -31,6 +32,7 @@ contract Deploy is Script {
         MockMarineFarmFacet mockMarineFarmFacet;
         ERC6551Account erc6551Account;
         ERC6551Registry erc6551Registry;
+        ERC6551Facet erc6551Facet;
     }
 
     function run() external returns (Deployment memory) {
@@ -69,10 +71,11 @@ contract Deploy is Script {
         MockMarineFarmFacet mockMarineFarmFacet = new MockMarineFarmFacet();
         ERC6551Account erc6551Account = new ERC6551Account();
         ERC6551Registry erc6551Registry = new ERC6551Registry();
+        ERC6551Facet erc6551Facet = new ERC6551Facet();
 
         // Diamond diamond = new Diamond(owner, address(diamondCutFacet), address(diamondLoupeFacet), address(ownershipFacet));
         Diamond diamond = Diamond(payable(0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8));
-        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](5);
+        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](6);
         facetCuts[0] = IDiamondCut.FacetCut({
             facetAddress: address(mockMarineFarmFacet),
             action: IDiamondCut.FacetCutAction.Add,
@@ -97,6 +100,11 @@ contract Deploy is Script {
             facetAddress: address(dnaFacet),
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: getSelectors("DNAFacet")
+        });
+        facetCuts[5] = IDiamondCut.FacetCut({
+            facetAddress: address(erc6551Facet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: getSelectors("ERC6551Facet")
         });
 
         InitDiamond.Args memory initArgs = InitDiamond.Args({
@@ -126,7 +134,8 @@ contract Deploy is Script {
             hooksFacet: hooksFacet,
             mockMarineFarmFacet: mockMarineFarmFacet,
             erc6551Account: erc6551Account,
-            erc6551Registry: erc6551Registry
+            erc6551Registry: erc6551Registry,
+            erc6551Facet: erc6551Facet
         });
     }
 
@@ -200,6 +209,10 @@ contract Deploy is Script {
             selectors[1] = MockMarineFarmFacet.claimFish.selector;
             selectors[2] = MockMarineFarmFacet.getFishs.selector;
             selectors[3] = MockMarineFarmFacet.harvest.selector;
+        } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("ERC6551Facet"))) {
+            selectors = new bytes4[](2);
+            selectors[0] = ERC6551Facet.account.selector;
+            selectors[1] = ERC6551Facet.execute.selector;
         }
 
         return selectors;
