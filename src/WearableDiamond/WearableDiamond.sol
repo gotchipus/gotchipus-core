@@ -8,22 +8,23 @@ pragma solidity ^0.8.0;
 //* Implementation of a diamond.
 //******************************************************************************/
 
-import { LibDiamond } from "./libraries/LibDiamond.sol";
-import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
-import { IDiamondLoupe } from  "./interfaces/IDiamondLoupe.sol";
+import { WearableLibDiamond } from "./libraries/WearableLibDiamond.sol";
+import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
+import { IDiamondLoupe } from  "../interfaces/IDiamondLoupe.sol";
 
-contract Diamond {    
-
+contract WearableDiamond {    
     constructor(address _contractOwner, address _diamondCutFacet, address _diamondLoupeFacet, address _ownershipFacet) payable {
-        LibDiamond.setContractOwner(_contractOwner);
-        LibDiamond.addDiamondFunctions(_diamondCutFacet, _diamondLoupeFacet, _ownershipFacet);
+        WearableLibDiamond.setContractOwner(_contractOwner);
+        WearableLibDiamond.addDiamondFunctions(_diamondCutFacet, _diamondLoupeFacet, _ownershipFacet);
+        WearableLibDiamond.DiamondStorage storage ds = WearableLibDiamond.diamondStorage();
+        ds.supportedInterfaces[0xd9b67a26] = true;
     }
 
     // Find facet for function that is called and execute the
     // function if a facet is found and return any value.
     fallback() external payable {
-        LibDiamond.DiamondStorage storage ds;
-        bytes32 position = LibDiamond.DIAMOND_STORAGE_POSITION;
+        WearableLibDiamond.DiamondStorage storage ds;
+        bytes32 position = WearableLibDiamond.DIAMOND_STORAGE_POSITION;
         // get diamond storage
         assembly {
             ds.slot := position
