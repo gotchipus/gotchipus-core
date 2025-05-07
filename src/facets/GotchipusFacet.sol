@@ -21,10 +21,12 @@ contract GotchipusFacet is Modifier {
 
     struct SummonArgs {
         uint256 gotchipusTokenId;
-        string pusName;
+        string gotchiName;
         address collateralToken;
         uint256 stakeAmount;
         uint8 utc;
+        bytes story;
+
     }
 
     function balanceOf(address _owner) external view returns (uint256) {
@@ -123,6 +125,12 @@ contract GotchipusFacet is Modifier {
         s.baseUri = _baseURI;
     }
 
+    function freeMint() external {
+        uint256 tokenId = s.nextTokenId;
+        s.nextTokenId++;
+        LibERC721._mint(msg.sender, tokenId);
+    }
+
     function mint(uint256 amount) external payable pharosMintIsPaused {
         require(amount != 0, "Invalid amount");
         bool isWhitelist = s.isWhitelist[msg.sender];
@@ -160,8 +168,7 @@ contract GotchipusFacet is Modifier {
         GotchipusInfo storage _ownedPus = s.ownedGotchipusInfos[msg.sender][_args.gotchipusTokenId];
         _ownedPus.dna.geneSeed = randomDna;
         _ownedPus.dna.ruleVersion = s.dnaRuleVersion;
-        _ownedPus.tokenId = _args.gotchipusTokenId;
-        _ownedPus.name = _args.pusName;
+        _ownedPus.name = _args.gotchiName;
         _ownedPus.uri = LibStrings.strWithUint("https://gotchipus.com/metadata/gotchipus/", _args.gotchipusTokenId);
         _ownedPus.owner = msg.sender;
         _ownedPus.collateral = _args.collateralToken;
@@ -171,6 +178,7 @@ contract GotchipusFacet is Modifier {
         _ownedPus.aether = _getStableAether(_args.stakeAmount);
         _ownedPus.singer = msg.sender;
         _ownedPus.status = 1;
+        _ownedPus.story = _args.story;
         s.accountOwnedByTokenId[_args.gotchipusTokenId] = account;
 
         uint256 packed = LibDna.computePacked(_args.gotchipusTokenId);

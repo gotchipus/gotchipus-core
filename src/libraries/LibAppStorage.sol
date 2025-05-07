@@ -7,9 +7,9 @@ import { LibDiamond } from "./LibDiamond.sol";
 
 struct GotchipusInfo {
     // nft info
-    uint256 tokenId;
     string name;
     string uri;
+    bytes story; // gotchi story background
     address owner;
     address collateral;
     uint256 collateralAmount;

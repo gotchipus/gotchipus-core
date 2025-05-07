@@ -39,7 +39,6 @@ library LibERC721 {
         s.balances[_to] += 1;
         s.tokenOwners[_tokenId] = _to;
 
-        s.ownedGotchipusInfos[_to][_tokenId].tokenId = _tokenId;
         s.ownedGotchipusInfos[_to][_tokenId].owner = _to;
 
         emit Transfer(address(0), _to, _tokenId);
