@@ -9,8 +9,14 @@ contract ERC6551Facet is Modifier {
         return s.accountOwnedByTokenId[tokenId];
     }
 
-    function execute(address to, uint256 value, bytes calldata data, uint8 operation) external payable returns (bytes memory result) {
-        result = IERC6551Executable(s.erc6551Implementation).execute{value: value}(
+    function execute(
+        uint256 tokenId, 
+        address to, 
+        uint256 value, 
+        bytes calldata data, 
+        uint8 operation
+    ) external payable onlyGotchipusOwner(tokenId) returns (bytes memory result) {
+        result = IERC6551Executable(s.accountOwnedByTokenId[tokenId]).execute{value: value}(
             to,
             value,
             data,

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { Permissions } from "../libraries/LibAppStorage.sol";
-import { LibHooks } from "../libraries/LibHooks.sol";
+import { LibHooks, Permissions } from "../libraries/LibHooks.sol";
 import { IHook } from "../interfaces/IHook.sol";
 
 abstract contract BaseHook is IHook {

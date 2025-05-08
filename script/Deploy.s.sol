@@ -11,7 +11,6 @@ import { OwnershipFacet } from "../src/facets/OwnershipFacet.sol";
 import { AttributesFacet } from "../src/facets/AttributesFacet.sol";
 import { DNAFacet } from "../src/facets/DNAFacet.sol";
 import { HooksFacet } from "../src/facets/HooksFacet.sol";
-import { MockMarineFarmFacet } from "../src/facets/MockMarineFarmFacet.sol";
 import { IDiamondCut } from "../src/interfaces/IDiamondCut.sol";
 import { TraitsOffset } from "../src/libraries/LibAppStorage.sol";
 import { ERC6551Registry } from "../src/ERC6551Registry.sol";
@@ -29,7 +28,6 @@ contract Deploy is Script {
         AttributesFacet attributesFacet;
         DNAFacet dnaFacet;
         HooksFacet hooksFacet;
-        MockMarineFarmFacet mockMarineFarmFacet;
         ERC6551Account erc6551Account;
         ERC6551Registry erc6551Registry;
         ERC6551Facet erc6551Facet;
@@ -51,7 +49,6 @@ contract Deploy is Script {
      * attributesFacet: 0xcE6360CBE1d2E47734479E30a09Ffe0132a5C149, 
      * dnaFacet: 0x14E66f0056b336a87Fd5Ae876a03b1a5fbdBDC66, 
      * hooksFacet: 0x8A1B589729bC9e3F6C79940331EfC7a2bD83039d, 
-     * mockMarineFarmFacet: 0xaf04Cb9171772d4E2a974393734CA6BD009ea56B
      */
 
     function deploy(address owner) public returns (Deployment memory) {
@@ -68,7 +65,6 @@ contract Deploy is Script {
         AttributesFacet attributesFacet = new AttributesFacet();
         DNAFacet dnaFacet = new DNAFacet();
         HooksFacet hooksFacet = new HooksFacet();
-        MockMarineFarmFacet mockMarineFarmFacet = new MockMarineFarmFacet();
         ERC6551Account erc6551Account = new ERC6551Account();
         ERC6551Registry erc6551Registry = new ERC6551Registry();
         ERC6551Facet erc6551Facet = new ERC6551Facet();
@@ -77,9 +73,9 @@ contract Deploy is Script {
         Diamond diamond = Diamond(payable(0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8));
         IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](6);
         facetCuts[0] = IDiamondCut.FacetCut({
-            facetAddress: address(mockMarineFarmFacet),
+            facetAddress: address(erc6551Facet),
             action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: getSelectors("MockMarineFarmFacet")
+            functionSelectors: getSelectors("ERC6551Facet")
         });
         facetCuts[1] = IDiamondCut.FacetCut({
             facetAddress: address(hooksFacet),
@@ -100,11 +96,6 @@ contract Deploy is Script {
             facetAddress: address(dnaFacet),
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: getSelectors("DNAFacet")
-        });
-        facetCuts[5] = IDiamondCut.FacetCut({
-            facetAddress: address(erc6551Facet),
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: getSelectors("ERC6551Facet")
         });
 
         InitDiamond.Args memory initArgs = InitDiamond.Args({
@@ -132,7 +123,6 @@ contract Deploy is Script {
             attributesFacet: attributesFacet,
             dnaFacet: dnaFacet,
             hooksFacet: hooksFacet,
-            mockMarineFarmFacet: mockMarineFarmFacet,
             erc6551Account: erc6551Account,
             erc6551Registry: erc6551Registry,
             erc6551Facet: erc6551Facet
@@ -203,12 +193,6 @@ contract Deploy is Script {
             selectors = new bytes4[](2);
             selectors[0] = HooksFacet.addHook.selector;
             selectors[1] = HooksFacet.getHooks.selector;
-        } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("MockMarineFarmFacet"))) {
-            selectors = new bytes4[](4);
-            selectors[0] = MockMarineFarmFacet.breed.selector;
-            selectors[1] = MockMarineFarmFacet.claimFish.selector;
-            selectors[2] = MockMarineFarmFacet.getFishs.selector;
-            selectors[3] = MockMarineFarmFacet.harvest.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("ERC6551Facet"))) {
             selectors = new bytes4[](2);
             selectors[0] = ERC6551Facet.account.selector;

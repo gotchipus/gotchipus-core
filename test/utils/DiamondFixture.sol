@@ -11,7 +11,6 @@ import { OwnershipFacet } from "../../src/facets/OwnershipFacet.sol";
 import { AttributesFacet } from "../../src/facets/AttributesFacet.sol";
 import { DNAFacet } from "../../src/facets/DNAFacet.sol";
 import { HooksFacet } from "../../src/facets/HooksFacet.sol";
-import { MockMarineFarmFacet } from "../../src/facets/MockMarineFarmFacet.sol";
 import { IDiamondCut } from "../../src/interfaces/IDiamondCut.sol";
 import { TraitsOffset } from "../../src/libraries/LibAppStorage.sol";
 import { ERC6551Registry } from "../../src/ERC6551Registry.sol";
@@ -28,7 +27,6 @@ contract DiamondFixture is Test {
     AttributesFacet public attributesFacet;
     DNAFacet public dnaFacet;
     HooksFacet public hooksFacet;
-    MockMarineFarmFacet public mockMarineFarmFacet;
     ERC6551Facet public erc6551Facet;
     ERC6551Account public erc6551Account;
     ERC6551Registry public erc6551Registry;
@@ -44,7 +42,6 @@ contract DiamondFixture is Test {
         attributesFacet = new AttributesFacet();
         dnaFacet = new DNAFacet();
         hooksFacet = new HooksFacet();
-        mockMarineFarmFacet = new MockMarineFarmFacet();
         erc6551Facet = new ERC6551Facet();
         erc6551Account = new ERC6551Account();
         erc6551Registry = new ERC6551Registry();
@@ -52,9 +49,9 @@ contract DiamondFixture is Test {
         diamond = new Diamond(owner, address(cutFacet), address(loupeFacet), address(ownershipFacet));
         IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](6);
         facetCuts[0] = IDiamondCut.FacetCut({
-            facetAddress: address(mockMarineFarmFacet),
+            facetAddress: address(erc6551Facet),
             action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: getSelectors("MockMarineFarmFacet")
+            functionSelectors: getSelectors("ERC6551Facet")
         });
         facetCuts[1] = IDiamondCut.FacetCut({
             facetAddress: address(hooksFacet),
@@ -75,11 +72,6 @@ contract DiamondFixture is Test {
             facetAddress: address(dnaFacet),
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: getSelectors("DNAFacet")
-        });
-        facetCuts[5] = IDiamondCut.FacetCut({
-            facetAddress: address(erc6551Facet),
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: getSelectors("ERC6551Facet")
         });
 
         InitDiamond.Args memory initArgs = InitDiamond.Args({
@@ -160,12 +152,6 @@ contract DiamondFixture is Test {
             selectors = new bytes4[](2);
             selectors[0] = HooksFacet.addHook.selector;
             selectors[1] = HooksFacet.getHooks.selector;
-        } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("MockMarineFarmFacet"))) {
-            selectors = new bytes4[](4);
-            selectors[0] = MockMarineFarmFacet.breed.selector;
-            selectors[1] = MockMarineFarmFacet.claimFish.selector;
-            selectors[2] = MockMarineFarmFacet.getFishs.selector;
-            selectors[3] = MockMarineFarmFacet.harvest.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("ERC6551Facet"))) {
             selectors = new bytes4[](2);
             selectors[0] = ERC6551Facet.account.selector;
