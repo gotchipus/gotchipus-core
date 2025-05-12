@@ -11,6 +11,17 @@ import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
 contract ERC6551Account is IERC165, IERC1271, IERC6551Account, IERC6551Executable {
     uint256 public state;
+    
+    modifier OnlyOwnerOrGotchi() {
+        (uint256 chainId, address tokenContract, uint256 tokenId) = token();
+        require(
+            msg.sender == IERC721(tokenContract).ownerOf(tokenId) ||
+            msg.sender == tokenContract,
+            "Invalid signer"
+        );
+        _;
+    }
+
     receive() external payable override {}
 
     function token() public view virtual returns (uint256, address, uint256) {
@@ -67,9 +78,9 @@ contract ERC6551Account is IERC165, IERC1271, IERC6551Account, IERC6551Executabl
         external
         payable
         virtual
+        OnlyOwnerOrGotchi
         returns (bytes memory result)
     {
-        require(_isValidSigner(msg.sender), "Invalid signer");
         require(operation == 0, "Only call operations are supported");
 
         ++state;

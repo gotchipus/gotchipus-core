@@ -46,6 +46,11 @@ struct SvgLayer {
     uint16 size;
 }
 
+struct PaymasterConfig {
+    uint256 nonce;
+    mapping(bytes32 => bool) extTx;
+}
+
 struct AppStorage {
     string name;
     string symbol;
@@ -91,6 +96,8 @@ struct AppStorage {
     // ext contract
     address erc6551Registry;
     address erc6551Implementation;
+    mapping(address => PaymasterConfig) paymaster;
+    mapping(address => bool) isPaymaster;
 }
 
 
