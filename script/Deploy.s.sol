@@ -196,7 +196,7 @@ contract Deploy is Script {
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("ERC6551Facet"))) {
             selectors = new bytes4[](2);
             selectors[0] = ERC6551Facet.account.selector;
-            selectors[1] = ERC6551Facet.execute.selector;
+            selectors[1] = ERC6551Facet.executeAccount.selector;
         }
 
         return selectors;

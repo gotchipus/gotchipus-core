@@ -3,6 +3,8 @@ pragma solidity ^0.8.29;
 
 import { Modifier } from "../libraries/LibAppStorage.sol";
 import { UserOperation, LibUserOperation } from "../libraries/LibUserOperation.sol";
+import { LibMath } from "../libraries/LibMath.sol";
+import { IERC6551Facet } from "../interfaces/IERC6551Facet.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -10,6 +12,14 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract PaymasterFacet is Modifier {
     using SafeERC20 for IERC20;
     using LibUserOperation for UserOperation;
+    using LibMath for uint256;
+
+    event Paymaster(address indexed account, address indexed paymasterAddress, address gasToken, uint256 payAmount);
+    event TransactionExecuted(address indexed account, bytes data, bytes32 signedHash);
+
+    function erc6551Facet() internal view returns (IERC6551Facet eFacet) {
+        eFacet = IERC6551Facet(address(this));
+    }
 
     function getNonce(address account) external view returns (uint256) {
         return s.paymaster[account].nonce;
@@ -23,18 +33,40 @@ contract PaymasterFacet is Modifier {
         return s.isPaymaster[paymaster];
     }
 
-    function ValidateSignature(UserOperation calldata userOp) internal view returns (bool) {
-        if (userOp.signature.length == 0) {
-            return true;
-        }
+    function execute(address account, address to, UserOperation calldata userOp) external returns (bool) {
+        require(s.isPaymaster[msg.sender], "Only paymaster");
+        uint256 startGas = gasleft() + 21000 + msg.data.length * 8;
+        require(startGas >= userOp.gasLimit, "Not enough gas provided");
+        require(ValidateSignature(userOp), "Invalid signature");
 
+        paymasterPrepayment(account, startGas, userOp);
+
+        bool success;
+        bytes memory result = erc6551Facet().executeAccount(
+            account,
+            userOp.tokenId,
+            to,
+            userOp.value,
+            userOp.data
+        );
+        if (result.length > 0) {
+            require(abi.decode(result, (bool)), "Paymaster transfer failed");
+            success = true;
+        }
+        
+        emit TransactionExecuted(account, userOp.data, getSignHash(userOp));
+        return success;
+    }
+
+
+    function ValidateSignature(UserOperation calldata userOp) internal view returns (bool) {
         return SignatureChecker.isValidSignatureNow(
             s.tokenOwners[userOp.tokenId], 
             getSignHash(userOp), 
             userOp.signature
         );
     }
-     
+    
     function getSignHash(UserOperation calldata userOp) internal view returns (bytes32) {
         return keccak256(
             abi.encodePacked(
@@ -44,5 +76,45 @@ contract PaymasterFacet is Modifier {
         );
     }
 
+    function paymasterPrepayment(
+        address account, 
+        uint256 startGas,
+        UserOperation calldata userOp
+    ) internal {
+        if (userOp.gasPrice > 0) {
+            address paymasterAddress =  userOp.gasPaymaster == address(0) ? msg.sender : userOp.gasPaymaster;
+            
+            uint256 payAmount;
+            if (userOp.gasToken == address(0)) {
+                uint256 gasConsumed = startGas - gasleft() + 23000;
+                payAmount = gasConsumed.min(userOp.gasLimit) * userOp.gasPrice.min(tx.gasprice);
+                erc6551Facet().executeAccount(
+                    account, 
+                    userOp.tokenId,
+                    paymasterAddress,
+                    payAmount,
+                    ""
+                );
+            } else {
+                uint256 gasConsumed = startGas - gasleft() + 37500;
+                // get token gas price from dex oracle
+                uint256 tokenGasPrice = 1; 
+                payAmount = gasConsumed.min(userOp.gasLimit) * userOp.gasPrice.min(tokenGasPrice);
+                bytes memory payData = abi.encodeWithSelector(IERC20.transfer.selector, paymasterAddress, payAmount);
+                bytes memory result = erc6551Facet().executeAccount(
+                    account,
+                    userOp.tokenId,
+                    paymasterAddress,
+                    0,
+                    payData
+                );
+                if (result.length > 0) {
+                    require(abi.decode(result, (bool)), "Paymaster transfer failed");
+                }
+            }
+
+            emit Paymaster(account, paymasterAddress, userOp.gasToken, payAmount);
+        }
+    }
 
 }

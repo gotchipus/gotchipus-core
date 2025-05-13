@@ -10,7 +10,7 @@ struct UserOperation {
     uint256 gasPrice;
     uint256 gasLimit;
     address gasToken;
-    address gasRelayer;
+    address gasPaymaster;
     bytes signature;
 }
 
@@ -29,7 +29,7 @@ library LibUserOperation {
                 userOp.gasPrice,
                 userOp.gasLimit,
                 userOp.gasToken,
-                userOp.gasRelayer
+                userOp.gasPaymaster
             )
         );
     }

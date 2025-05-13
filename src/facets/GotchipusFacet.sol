@@ -146,7 +146,7 @@ contract GotchipusFacet is Modifier {
         }
     }
 
-    function summonGotchipus(SummonArgs calldata _args) external payable onlyPharosOwner(_args.gotchipusTokenId) {
+    function summonGotchipus(SummonArgs calldata _args) external payable onlyGotchipusOwner(_args.gotchipusTokenId) {
         require(s.accountOwnedByTokenId[_args.gotchipusTokenId] == address(0), "Pharos: already summon");
         
         bytes32 salt = keccak256(abi.encode(block.chainid, _args.gotchipusTokenId, address(this)));

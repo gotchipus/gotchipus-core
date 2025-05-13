@@ -127,8 +127,12 @@ contract Modifier {
         _;
     }
 
-    modifier onlyPharosOwner(uint256 _tokenId) {
-        require(LibMeta.msgSender() == s.tokenOwners[_tokenId], "LibAppStorage: Only pharos owner");
+    modifier onlyOwnerOrPaymaster(uint256 _tokenId) {
+        require(
+            LibMeta.msgSender() == s.tokenOwners[_tokenId] ||
+            s.isPaymaster[LibMeta.msgSender()],
+            "LibAppStorage: Only gotchi owner or paymaster"
+        );
         _;
     }
 }
