@@ -16,6 +16,7 @@ contract PaymasterFacet is Modifier {
 
     event Paymaster(address indexed account, address indexed paymasterAddress, address gasToken, uint256 payAmount);
     event TransactionExecuted(address indexed account, bytes data, bytes32 signedHash);
+    event PaymasterAction(address indexed paymaster, bool indexed isPaymaster);
 
     function erc6551Facet() internal view returns (IERC6551Facet eFacet) {
         eFacet = IERC6551Facet(address(this));
@@ -33,11 +34,26 @@ contract PaymasterFacet is Modifier {
         return s.isPaymaster[paymaster];
     }
 
+    function addPaymaster(address[] calldata paymasters, bool[] calldata isPaymasters) external onlyOwner {
+        require(paymasters.length == isPaymasters.length, "Invalid paymasters");
+
+        for (uint256 i = 0; i < paymasters.length; i++) {
+            s.isPaymaster[paymasters[i]] = isPaymasters[i];
+            emit PaymasterAction(paymasters[i], isPaymasters[i]);
+        }
+    }
+
     function execute(address account, address to, UserOperation calldata userOp) external returns (bool) {
         require(s.isPaymaster[msg.sender], "Only paymaster");
         uint256 startGas = gasleft() + 21000 + msg.data.length * 8;
         require(startGas >= userOp.gasLimit, "Not enough gas provided");
         require(ValidateSignature(userOp), "Invalid signature");
+
+        bytes32 signHash = getSignHash(userOp);
+        require(!s.paymaster[msg.sender].extTx[signHash], "Tx already exists");
+        require(s.paymaster[msg.sender].nonce == userOp.nonce, "Nonce to low/high");
+        s.paymaster[msg.sender].nonce += 1;
+        s.paymaster[msg.sender].extTx[signHash] = true;
 
         paymasterPrepayment(account, startGas, userOp);
 
@@ -54,7 +70,7 @@ contract PaymasterFacet is Modifier {
             success = true;
         }
         
-        emit TransactionExecuted(account, userOp.data, getSignHash(userOp));
+        emit TransactionExecuted(account, userOp.data, signHash);
         return success;
     }
 
