@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import { LibMeta } from "./LibMeta.sol";
 import { LibDiamond } from "./LibDiamond.sol";
 import { IHook } from "../interfaces/IHook.sol";
+import { LibTime } from "./LibTime.sol";
 
 struct GotchipusInfo {
     // nft info
@@ -98,6 +99,9 @@ struct AppStorage {
     address erc6551Implementation;
     mapping(address => PaymasterConfig) paymaster;
     mapping(address => bool) isPaymaster;
+
+    // off-chain weather
+    mapping(uint8 => LibTime.Weather) weatherByTimezone;
 }
 
 

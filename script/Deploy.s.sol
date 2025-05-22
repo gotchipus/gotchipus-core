@@ -16,6 +16,9 @@ import { TraitsOffset } from "../src/libraries/LibAppStorage.sol";
 import { ERC6551Registry } from "../src/ERC6551Registry.sol";
 import { ERC6551Account } from "../src/ERC6551Account.sol";
 import { ERC6551Facet } from "../../src/facets/ERC6551Facet.sol";
+import { SvgFacet } from "../../src/facets/SvgFacet.sol";
+import { PaymasterFacet } from "../../src/facets/PaymasterFacet.sol";
+
 
 contract Deploy is Script {
     struct Deployment {
@@ -31,6 +34,8 @@ contract Deploy is Script {
         ERC6551Account erc6551Account;
         ERC6551Registry erc6551Registry;
         ERC6551Facet erc6551Facet;
+        SvgFacet svgFacet;
+        PaymasterFacet paymasterFacet;
     }
 
     function run() external returns (Deployment memory) {
@@ -38,17 +43,22 @@ contract Deploy is Script {
     }
 
     /** 
-     * Pharos devnet
-     * create2Factory: 0x000000f2529cafe47f13bc4d674e343a97a870c1
+     * Pharos testnet
+     * create2Factory: 0x000000f2529CaFE47f13BC4d674e343A97A870c1
      * diamond: 0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8, 
-     * initDiamond: 0x28e3350B608E4bcFE0f654Bd3e288E20D94A8382, 
+     * ERC6551Registry: 0x000000E7C8746fdB64D791f6bb387889c5291454
+     * ERC6551Account: 0xee8862134dFe901C62dbC72B25930da791a20CFf
+     * 
+     * initDiamond: 0xd7178B120D93cd975737902d8c8e46D430eBd502, 
      * diamondCutFacet: 0xfb6CF9f914c76ccDc3Fc722b5c0D3EFa5C4F7DFA, 
      * diamondLoupeFacet: 0xd87AC654aA730ca72681a3Aa29898a8F0ae0dd57, 
-     * gotchipusFacet: 0x1Ab5C117EFC5C358bFFF7c4fe2cf5ccCEb408309, 
+     * gotchipusFacet: 0xcE6360CBE1d2E47734479E30a09Ffe0132a5C149, 
      * ownershipFacet: 0x705F094215317bAe890b78d1b374E66caa052c12, 
-     * attributesFacet: 0xcE6360CBE1d2E47734479E30a09Ffe0132a5C149, 
-     * dnaFacet: 0x14E66f0056b336a87Fd5Ae876a03b1a5fbdBDC66, 
-     * hooksFacet: 0x8A1B589729bC9e3F6C79940331EfC7a2bD83039d, 
+     * attributesFacet: 0x14E66f0056b336a87Fd5Ae876a03b1a5fbdBDC66, 
+     * dnaFacet: 0x8A1B589729bC9e3F6C79940331EfC7a2bD83039d, 
+     * hooksFacet: 0xaf04Cb9171772d4E2a974393734CA6BD009ea56B, 
+     * svgFacet: 0x9E0d56CB5D2a17203844494239574477BFc6ba89
+     * paymasterFacet: 0x75E7765769789DcF2E7392B648d292239aDb3f2C
      */
 
     function deploy(address owner) public returns (Deployment memory) {
@@ -65,13 +75,15 @@ contract Deploy is Script {
         AttributesFacet attributesFacet = new AttributesFacet();
         DNAFacet dnaFacet = new DNAFacet();
         HooksFacet hooksFacet = new HooksFacet();
-        ERC6551Account erc6551Account = new ERC6551Account();
-        ERC6551Registry erc6551Registry = new ERC6551Registry();
+        ERC6551Account erc6551Account = ERC6551Account(payable(0xee8862134dFe901C62dbC72B25930da791a20CFf));
+        ERC6551Registry erc6551Registry = ERC6551Registry(0x000000E7C8746fdB64D791f6bb387889c5291454);
         ERC6551Facet erc6551Facet = new ERC6551Facet();
+        SvgFacet svgFacet = new SvgFacet();
+        PaymasterFacet paymasterFacet = new PaymasterFacet();
 
         // Diamond diamond = new Diamond(owner, address(diamondCutFacet), address(diamondLoupeFacet), address(ownershipFacet));
         Diamond diamond = Diamond(payable(0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8));
-        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](6);
+        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](7);
         facetCuts[0] = IDiamondCut.FacetCut({
             facetAddress: address(erc6551Facet),
             action: IDiamondCut.FacetCutAction.Add,
@@ -97,10 +109,19 @@ contract Deploy is Script {
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: getSelectors("DNAFacet")
         });
-
+        facetCuts[5] = IDiamondCut.FacetCut({
+            facetAddress: address(svgFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: getSelectors("SvgFacet")
+        });
+        facetCuts[6] = IDiamondCut.FacetCut({
+            facetAddress: address(paymasterFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: getSelectors("PaymasterFacet")
+        });
         InitDiamond.Args memory initArgs = InitDiamond.Args({
-            name: "GotchipusNFT",
-            symbol: "GTP",
+            name: "Gotchipus",
+            symbol: "GOTCHI",
             baseUri: "https://gotchipus.com/metadata/",
             createUtcHour: 0,
             traitsOffset: getTraitsOffset(),
@@ -125,7 +146,9 @@ contract Deploy is Script {
             hooksFacet: hooksFacet,
             erc6551Account: erc6551Account,
             erc6551Registry: erc6551Registry,
-            erc6551Facet: erc6551Facet
+            erc6551Facet: erc6551Facet,
+            svgFacet: svgFacet,
+            paymasterFacet: paymasterFacet
         });
     }
 
@@ -150,7 +173,7 @@ contract Deploy is Script {
         bytes4[] memory selectors;
 
         if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("GotchipusFacet"))) {
-            selectors = new bytes4[](22);
+            selectors = new bytes4[](23);
             selectors[0] = GotchipusFacet.balanceOf.selector;
             selectors[1] = GotchipusFacet.ownerOf.selector;
             selectors[2] = GotchipusFacet.totalSupply.selector;
@@ -173,6 +196,7 @@ contract Deploy is Script {
             selectors[19] = GotchipusFacet.summonGotchipus.selector;
             selectors[20] = GotchipusFacet.addWhitelist.selector;
             selectors[21] = GotchipusFacet.paused.selector;
+            selectors[22] = GotchipusFacet.freeMint.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("AttributesFacet"))) {
             selectors = new bytes4[](8);
             selectors[0] = AttributesFacet.aether.selector;
@@ -190,13 +214,28 @@ contract Deploy is Script {
             selectors[2] = DNAFacet.setRuleVersion.selector;
             selectors[3] = DNAFacet.tokenGeneSeed.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("HooksFacet"))) {
-            selectors = new bytes4[](2);
+            selectors = new bytes4[](3);
             selectors[0] = HooksFacet.addHook.selector;
             selectors[1] = HooksFacet.getHooks.selector;
+            selectors[2] = HooksFacet.removeHook.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("ERC6551Facet"))) {
             selectors = new bytes4[](2);
             selectors[0] = ERC6551Facet.account.selector;
             selectors[1] = ERC6551Facet.executeAccount.selector;
+        } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("SvgFacet"))) {
+            selectors = new bytes4[](5);
+            selectors[0] = SvgFacet.getSvg.selector;
+            selectors[1] = SvgFacet.getSliceSvgs.selector;
+            selectors[2] = SvgFacet.getSliceSvg.selector;
+            selectors[3] = SvgFacet.storeSvg.selector;
+            selectors[4] = SvgFacet.updateSvg.selector;
+        } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("PaymasterFacet"))) {
+            selectors = new bytes4[](5);
+            selectors[0] = PaymasterFacet.getNonce.selector;
+            selectors[1] = PaymasterFacet.isExecutedTx.selector;
+            selectors[2] = PaymasterFacet.isPaymaster.selector;
+            selectors[3] = PaymasterFacet.addPaymaster.selector;
+            selectors[4] = PaymasterFacet.execute.selector;
         }
 
         return selectors;
