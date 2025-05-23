@@ -52,6 +52,7 @@ struct PaymasterConfig {
     mapping(bytes32 => bool) extTx;
 }
 
+
 struct AppStorage {
     string name;
     string symbol;
@@ -102,6 +103,10 @@ struct AppStorage {
 
     // off-chain weather
     mapping(uint8 => LibTime.Weather) weatherByTimezone;
+
+    // gotchipus traits index
+    mapping(uint256 => mapping(uint8 => uint8)) gotchiTraitsIndex;
+    mapping(uint8 => bytes32) svgTypeBytes32;
 }
 
 

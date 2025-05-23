@@ -1,11 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { AppStorage, Modifier } from "../libraries/LibAppStorage.sol";
+import { AppStorage, Modifier, SvgLayer } from "../libraries/LibAppStorage.sol";
 import { LibSvg } from "../libraries/LibSvg.sol";
 import { LibStrings } from "../libraries/LibStrings.sol";
 
 contract SvgFacet is Modifier {
+    function getGotchipusSvg(uint256 tokenId) external view returns (string memory gs) {
+        address owner = s.tokenOwners[tokenId];
+        uint8 status = s.ownedGotchipusInfos[owner][tokenId].status;
+        bytes memory svg;
+        if (status == 0) {
+            bytes32 pharos = bytes32(abi.encodePacked("pharos"));
+            address svgLayerContract = s.svgLayers[pharos][0].svgLayerContract;
+            svg = LibSvg.readSvg(svgLayerContract);
+        } else if (status == 1) {
+            for (uint256 i = 0; i < LibSvg.MAX_TRAITS_NUM; i++) {
+                uint8 index = s.gotchiTraitsIndex[tokenId][uint8(i)];
+                bytes32 svgType = s.svgTypeBytes32[uint8(i)];
+                svg = bytes.concat(svg, LibSvg.sliceSvg(svgType, index));
+            }
+        }
+
+        gs = string(abi.encodePacked('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">', svg, "</svg>"));
+    }
+
     function getSvg(bytes32 svgType, uint256 id) external view returns (string memory svg) {
         address svgLayerContract = s.svgLayers[svgType][id].svgLayerContract;
         svg = string(LibSvg.readSvg(svgLayerContract));

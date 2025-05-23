@@ -16,6 +16,7 @@ import { TraitsOffset } from "../../src/libraries/LibAppStorage.sol";
 import { ERC6551Registry } from "../../src/ERC6551Registry.sol";
 import { ERC6551Account } from "../../src/ERC6551Account.sol";
 import { ERC6551Facet } from "../../src/facets/ERC6551Facet.sol";
+import { LibSvg } from "../../src/libraries/LibSvg.sol";
 
 contract DiamondFixture is Test {
     Diamond public diamond;
@@ -74,6 +75,14 @@ contract DiamondFixture is Test {
             functionSelectors: getSelectors("DNAFacet")
         });
 
+        bytes32[] memory svgTypes;
+        svgTypes[0] = LibSvg.SVG_TYPE_BG;
+        svgTypes[1] = LibSvg.SVG_TYPE_BODY;
+        svgTypes[2] = LibSvg.SVG_TYPE_EYE;
+        svgTypes[3] = LibSvg.SVG_TYPE_HAND;
+        svgTypes[4] = LibSvg.SVG_TYPE_HEAD;
+        svgTypes[5] = LibSvg.SVG_TYPE_CLOTHES;
+
         InitDiamond.Args memory initArgs = InitDiamond.Args({
             name: "GotchipusNFT",
             symbol: "GTP",
@@ -81,7 +90,8 @@ contract DiamondFixture is Test {
             createUtcHour: 0,
             traitsOffset: getTraitsOffset(),
             erc6551Registry: address(erc6551Registry),
-            erc6551AccountImplementation: address(erc6551Account)
+            erc6551AccountImplementation: address(erc6551Account),
+            svgTypes: svgTypes
         });
         bytes memory initCalldata = abi.encodeWithSelector(InitDiamond.init.selector, initArgs);
 

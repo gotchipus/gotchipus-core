@@ -18,6 +18,7 @@ import { ERC6551Account } from "../src/ERC6551Account.sol";
 import { ERC6551Facet } from "../../src/facets/ERC6551Facet.sol";
 import { SvgFacet } from "../../src/facets/SvgFacet.sol";
 import { PaymasterFacet } from "../../src/facets/PaymasterFacet.sol";
+import { LibSvg } from "../src/libraries/LibSvg.sol";
 
 
 contract Deploy is Script {
@@ -119,6 +120,15 @@ contract Deploy is Script {
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: getSelectors("PaymasterFacet")
         });
+
+        bytes32[] memory svgTypes;
+        svgTypes[0] = LibSvg.SVG_TYPE_BG;
+        svgTypes[1] = LibSvg.SVG_TYPE_BODY;
+        svgTypes[2] = LibSvg.SVG_TYPE_EYE;
+        svgTypes[3] = LibSvg.SVG_TYPE_HAND;
+        svgTypes[4] = LibSvg.SVG_TYPE_HEAD;
+        svgTypes[5] = LibSvg.SVG_TYPE_CLOTHES;
+
         InitDiamond.Args memory initArgs = InitDiamond.Args({
             name: "Gotchipus",
             symbol: "GOTCHI",
@@ -126,7 +136,8 @@ contract Deploy is Script {
             createUtcHour: 0,
             traitsOffset: getTraitsOffset(),
             erc6551Registry: address(erc6551Registry),
-            erc6551AccountImplementation: address(erc6551Account)
+            erc6551AccountImplementation: address(erc6551Account),
+            svgTypes: svgTypes
         });
         bytes memory initCalldata = abi.encodeWithSelector(InitDiamond.init.selector, initArgs);
 

@@ -3,6 +3,7 @@ pragma solidity ^0.8.29;
 
 import { AppStorage, TraitsOffset } from "./libraries/LibAppStorage.sol";
 import { LibDiamond } from "./libraries/LibDiamond.sol";
+import { LibSvg } from "./libraries/LibSvg.sol";
 import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
 import { IDiamondLoupe } from  "./interfaces/IDiamondLoupe.sol";
 import { IERC173 } from "./interfaces/IERC173.sol";
@@ -20,6 +21,7 @@ contract InitDiamond {
         TraitsOffset[] traitsOffset;
         address erc6551Registry;
         address erc6551AccountImplementation;
+        bytes32[] svgTypes;
     }
 
 
@@ -32,6 +34,10 @@ contract InitDiamond {
         s.traitsOffset = _args.traitsOffset;
         s.erc6551Registry = _args.erc6551Registry;
         s.erc6551Implementation = _args.erc6551AccountImplementation;
+        
+        for (uint256 i = 0; i < LibSvg.MAX_TRAITS_NUM; i++) {
+            s.svgTypeBytes32[uint8(i)] = _args.svgTypes[i];
+        }
 
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         // erc165

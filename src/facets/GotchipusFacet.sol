@@ -12,6 +12,7 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibDna } from "../libraries/LibDna.sol";
 import { LibTime } from "../libraries/LibTime.sol";
 import { LibTransferHelper } from "../libraries/LibTransferHepler.sol";
+import { LibSvg } from "../libraries/LibSvg.sol";
 import { IGotchipusFacet } from "../interfaces/IGotchipusFacet.sol";
 import { IERC6551Registry } from "../interfaces/IERC6551Registry.sol";
 
@@ -180,7 +181,8 @@ contract GotchipusFacet is Modifier {
         _ownedPus.status = 1;
         _ownedPus.story = _args.story;
         s.accountOwnedByTokenId[_args.gotchipusTokenId] = account;
-
+        randomTraitsIndex(_args.gotchipusTokenId);
+        
         uint256 packed = LibDna.computePacked(_args.gotchipusTokenId);
         LibDna.setPacked(_args.gotchipusTokenId, packed);
     }
@@ -220,4 +222,12 @@ contract GotchipusFacet is Modifier {
         LibERC721._transfer(_from, _to, _tokenId);
         require(LibERC721._checkOnERC721Received(_from, _to, _tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
+
+    function randomTraitsIndex(uint256 tokenId) internal {
+        for (uint256 i = 0; i < LibSvg.MAX_TRAITS_NUM; i++) {
+            uint256 index = block.timestamp % 10;
+            s.gotchiTraitsIndex[tokenId][uint8(i)] = uint8(index);
+        }
+    }
+
 }
