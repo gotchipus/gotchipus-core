@@ -31,6 +31,13 @@ struct GotchipusInfo {
     uint256 nonces;
 }
 
+struct WearableInfo {
+    string name;
+    string description;
+    string author;
+    uint8 svgId;
+}
+
 struct DNAData {
     uint256 geneSeed;
     uint8 ruleVersion;
@@ -107,6 +114,15 @@ struct AppStorage {
     // gotchipus traits index
     mapping(uint256 => mapping(uint8 => uint8)) gotchiTraitsIndex;
     mapping(uint8 => bytes32) svgTypeBytes32;
+
+    // Wearable nft
+    address wearableDiamond;
+    mapping(address => mapping(uint256 => uint256)) ownerWearableBalances;
+    mapping(address => uint256[]) ownerWearables;
+    mapping(uint256 => WearableInfo) wearableInfo;
+    mapping(uint256 => string) wearableUri;
+    uint256 nextWearableTokenId;
+    string wearableBaseUri;
 }
 
 
@@ -142,6 +158,12 @@ contract Modifier {
             s.isPaymaster[LibMeta.msgSender()],
             "LibAppStorage: Only gotchi owner or paymaster"
         );
+        _;
+    }
+
+    modifier onlyWearable() {
+        address sender = LibMeta.msgSender();
+        require(sender == s.wearableDiamond, "LibAppStorage: Only wearable diamond");
         _;
     }
 }
