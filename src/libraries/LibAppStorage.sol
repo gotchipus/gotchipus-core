@@ -35,6 +35,7 @@ struct WearableInfo {
     string name;
     string description;
     string author;
+    bytes32 svgType;
     uint8 svgId;
 }
 

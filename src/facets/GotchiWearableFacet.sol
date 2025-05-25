@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { Modifier } from "../libraries/LibAppStorage.sol";
+import { Modifier, WearableInfo } from "../libraries/LibAppStorage.sol";
 import { LibStrings } from "../libraries/LibStrings.sol";
 import { LibERC1155 } from "../WearableDiamond/libraries/LibERC1155.sol";
 
@@ -100,18 +100,29 @@ contract GotchiWearableFacet is Modifier {
         LibERC1155.doSafeBatchTransferAcceptanceCheck(operator, from, to, tokenIds, values, data);
     }
 
-    function createWearable(string calldata tokenUri) external onlyOwner {
+    function createWearable(string calldata tokenUri, WearableInfo calldata info) external onlyOwner {
         uint256 wearableTokenId = s.nextWearableTokenId;
         s.nextWearableTokenId++;
         s.wearableUri[wearableTokenId] = tokenUri;
         
+        s.wearableInfo[wearableTokenId].name = info.name;
+        s.wearableInfo[wearableTokenId].description = info.description;
+        s.wearableInfo[wearableTokenId].author = info.author;
+        s.wearableInfo[wearableTokenId].svgType = info.svgType;
+        s.wearableInfo[wearableTokenId].svgId = uint8(wearableTokenId);
         emit WearableURI(wearableTokenId, tokenUri);
     }
 
-    function createBatchWearable(string[] calldata tokenUris) external onlyOwner {
+    function createBatchWearable(string[] calldata tokenUris, WearableInfo[] calldata infos) external onlyOwner {
         for (uint256 i = 0; i < tokenUris.length; i++) {
             uint256 wearableTokenId = s.nextWearableTokenId++;
             s.wearableUri[wearableTokenId] = tokenUris[i];
+
+            s.wearableInfo[wearableTokenId].name = infos[i].name;
+            s.wearableInfo[wearableTokenId].description = infos[i].description;
+            s.wearableInfo[wearableTokenId].author = infos[i].author;
+            s.wearableInfo[wearableTokenId].svgType = infos[i].svgType;
+            s.wearableInfo[wearableTokenId].svgId = uint8(wearableTokenId);
             emit WearableURI(wearableTokenId, tokenUris[i]);
         }
     }
