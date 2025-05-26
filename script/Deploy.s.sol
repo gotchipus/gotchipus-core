@@ -132,7 +132,7 @@ contract Deploy is Script {
         InitDiamond.Args memory initArgs = InitDiamond.Args({
             name: "Gotchipus",
             symbol: "GOTCHI",
-            baseUri: "https://gotchipus.com/metadata/",
+            baseUri: "https://app.gotchipus.com/metadata/",
             createUtcHour: 0,
             traitsOffset: getTraitsOffset(),
             erc6551Registry: address(erc6551Registry),

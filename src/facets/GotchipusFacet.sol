@@ -69,9 +69,9 @@ contract GotchipusFacet is Modifier {
     function tokenURI(uint256 _tokenId) external view returns (string memory) {
         GotchipusInfo storage _ownedPus = s.ownedGotchipusInfos[s.tokenOwners[_tokenId]][_tokenId];
         if (_ownedPus.status == 0) {
-            return LibStrings.strWithUint("https://gotchipus.com/metadata/pharos/", _tokenId);
+            return LibStrings.strWithUint(string.concat(s.baseUri, "pharos/"), _tokenId);
         }
-        return LibStrings.strWithUint("https://gotchipus.com/metadata/gotchipus/", _tokenId);
+        return LibStrings.strWithUint(string.concat(s.baseUri, "gotchipus/"), _tokenId);
     }
 
     function getApproved(uint256 _tokenId) external view returns (address) {
@@ -170,7 +170,7 @@ contract GotchipusFacet is Modifier {
         _ownedPus.dna.geneSeed = randomDna;
         _ownedPus.dna.ruleVersion = s.dnaRuleVersion;
         _ownedPus.name = _args.gotchiName;
-        _ownedPus.uri = LibStrings.strWithUint("https://gotchipus.com/metadata/gotchipus/", _args.gotchipusTokenId);
+        _ownedPus.uri = LibStrings.strWithUint(string.concat(s.baseUri, "gotchipus/"), _args.gotchipusTokenId);
         _ownedPus.owner = msg.sender;
         _ownedPus.collateral = _args.collateralToken;
         _ownedPus.epoch = uint32(block.timestamp);

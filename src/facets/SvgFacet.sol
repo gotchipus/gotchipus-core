@@ -15,10 +15,20 @@ contract SvgFacet is Modifier {
             address svgLayerContract = s.svgLayers[pharos][0].svgLayerContract;
             svg = LibSvg.readSvg(svgLayerContract);
         } else if (status == 1) {
-            for (uint256 i = 0; i < LibSvg.MAX_TRAITS_NUM; i++) {
+            for (uint256 i = 0; i < LibSvg.MAX_BODY_NUM; i++) {
                 uint8 index = s.gotchiTraitsIndex[tokenId][uint8(i)];
                 bytes32 svgType = s.svgTypeBytes32[uint8(i)];
                 svg = bytes.concat(svg, LibSvg.sliceSvg(svgType, index));
+            }
+
+            if (s.isAnyEquipWearable[tokenId]) {
+                for (uint256 i = LibSvg.MAX_BODY_NUM; i < LibSvg.MAX_TRAITS_NUM; i++) {
+                    if (s.isEquipWearableByIndex[tokenId][i]) {
+                        uint8 index = s.gotchiTraitsIndex[tokenId][uint8(i)];
+                        bytes32 svgType = s.svgTypeBytes32[uint8(i)];
+                        svg = bytes.concat(svg, LibSvg.sliceSvg(svgType, index));
+                    }
+                }
             }
         }
 

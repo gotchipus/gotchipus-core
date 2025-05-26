@@ -132,4 +132,12 @@ contract GotchiWearableFacet is Modifier {
         emit AddWearable(wearable);
     }
 
+    function equipWearable(uint256 gotchiTokenId, uint256 wearableTokenId) external onlyGotchipusOwner(gotchiTokenId) {
+        require(s.ownerWearableBalances[msg.sender][wearableTokenId] > 0, "Wearable: Insufficient balance");
+        require(s.accountOwnedByTokenId[gotchiTokenId] == msg.sender, "Wearable: Only TBA call");
+        
+        s.isEquipWearableByIndex[gotchiTokenId][wearableTokenId] = true;
+        s.isAnyEquipWearable[gotchiTokenId] = true;
+    }
+
 }

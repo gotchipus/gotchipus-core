@@ -122,6 +122,8 @@ struct AppStorage {
     mapping(address => uint256[]) ownerWearables;
     mapping(uint256 => WearableInfo) wearableInfo;
     mapping(uint256 => string) wearableUri;
+    mapping(uint256 => mapping(uint256 => bool)) isEquipWearableByIndex;
+    mapping(uint256 => bool) isAnyEquipWearable;
     uint256 nextWearableTokenId;
     string wearableBaseUri;
 }
