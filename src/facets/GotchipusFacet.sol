@@ -19,6 +19,7 @@ import { IERC6551Registry } from "../interfaces/IERC6551Registry.sol";
 contract GotchipusFacet is Modifier {
     uint256 constant PHAROS_PRICE = 0.04 ether;
     uint256 constant MAX_TOTAL_SUPPLY = 20000;
+    uint256 constant MAX_PER_MINT = 30;
 
     struct SummonArgs {
         uint256 gotchipusTokenId;
@@ -27,7 +28,6 @@ contract GotchipusFacet is Modifier {
         uint256 stakeAmount;
         uint8 utc;
         bytes story;
-
     }
 
     function balanceOf(address _owner) external view returns (uint256) {
@@ -133,17 +133,23 @@ contract GotchipusFacet is Modifier {
     }
 
     function mint(uint256 amount) external payable pharosMintIsPaused {
-        require(amount != 0, "Invalid amount");
+        require(amount != 0 && amount <= MAX_PER_MINT, "Invalid amount");
         bool isWhitelist = s.isWhitelist[msg.sender];
-        uint256 tokenId = s.nextTokenId;
-        require(tokenId + 1 <= MAX_TOTAL_SUPPLY, "MAX TOTAL SUPPLY");
-        s.nextTokenId++;
 
         if (isWhitelist) {
+            uint256 tokenId = s.nextTokenId;
+            require(tokenId + 1 < MAX_TOTAL_SUPPLY, "MAX TOTAL SUPPLY");
+            s.nextTokenId++;
+
             LibERC721._mint(msg.sender, tokenId);
         } else {
             require(amount * PHAROS_PRICE == msg.value, "Invalid value");
-            LibERC721._mint(msg.sender, tokenId);
+            require(s.allTokens.length + amount <= MAX_TOTAL_SUPPLY, "MAX TOTAL SUPPLY");
+
+            for (uint256 i = 0; i < amount; i++) {
+                uint256 tokenId = s.nextTokenId++;
+                LibERC721._mint(msg.sender, tokenId);
+            }
         }
     }
 

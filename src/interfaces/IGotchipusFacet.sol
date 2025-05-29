@@ -12,6 +12,7 @@ interface IGotchipusFacet is IERC721, IERC721Enumerable, IERC721Metadata {
         address collateralToken;
         uint256 stakeAmount;
         uint8 utc;
+        bytes story;
     }
 
     function mint(uint256 amount) external payable;

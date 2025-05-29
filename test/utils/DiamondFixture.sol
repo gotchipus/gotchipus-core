@@ -48,7 +48,7 @@ contract DiamondFixture is Test {
         erc6551Registry = new ERC6551Registry();
 
         diamond = new Diamond(owner, address(cutFacet), address(loupeFacet), address(ownershipFacet));
-        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](6);
+        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](5);
         facetCuts[0] = IDiamondCut.FacetCut({
             facetAddress: address(erc6551Facet),
             action: IDiamondCut.FacetCutAction.Add,
@@ -75,7 +75,7 @@ contract DiamondFixture is Test {
             functionSelectors: getSelectors("DNAFacet")
         });
 
-        bytes32[] memory svgTypes;
+        bytes32[] memory svgTypes = new bytes32[](6);
         svgTypes[0] = LibSvg.SVG_TYPE_BG;
         svgTypes[1] = LibSvg.SVG_TYPE_BODY;
         svgTypes[2] = LibSvg.SVG_TYPE_EYE;
@@ -84,9 +84,9 @@ contract DiamondFixture is Test {
         svgTypes[5] = LibSvg.SVG_TYPE_CLOTHES;
 
         InitDiamond.Args memory initArgs = InitDiamond.Args({
-            name: "GotchipusNFT",
-            symbol: "GTP",
-            baseUri: "https://gotchipus.com/metadata/",
+            name: "Gotchipus",
+            symbol: "GOTCHI",
+            baseUri: "https://app.gotchipus.com/metadata/",
             createUtcHour: 0,
             traitsOffset: getTraitsOffset(),
             erc6551Registry: address(erc6551Registry),
