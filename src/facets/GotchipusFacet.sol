@@ -74,6 +74,10 @@ contract GotchipusFacet is Modifier {
         return LibStrings.strWithUint(string.concat(s.baseUri, "gotchipus/"), _tokenId);
     }
 
+    function ownedTokenInfo(address _owner, uint256 _tokenId) external view returns (GotchipusInfo memory info_) {
+        info_ = s.ownedGotchipusInfos[_owner][_tokenId];
+    }
+
     function getApproved(uint256 _tokenId) external view returns (address) {
         require(_tokenId < s.allTokens.length, "ERC721: tokenId is invalid");
         return s.tokenApprovals[_tokenId];

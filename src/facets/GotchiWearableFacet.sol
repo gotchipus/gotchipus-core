@@ -4,6 +4,7 @@ pragma solidity ^0.8.29;
 import { Modifier, WearableInfo } from "../libraries/LibAppStorage.sol";
 import { LibStrings } from "../libraries/LibStrings.sol";
 import { LibERC1155 } from "../WearableDiamond/libraries/LibERC1155.sol";
+import { IWearableFacet } from "../WearableDiamond/interfaces/IWearableFacet.sol";
 
 contract GotchiWearableFacet is Modifier {
     event AddWearable(address indexed wearable);
@@ -140,4 +141,10 @@ contract GotchiWearableFacet is Modifier {
         s.isAnyEquipWearable[gotchiTokenId] = true;
     }
 
+    function claimWearable() external ownedGotchi {
+        for (uint256 i = 0; i < 4; i++) {
+            s.ownerWearableBalances[msg.sender][i] += 1;
+            emit IWearableFacet.TransferSingle(msg.sender, address(0), msg.sender, i, 1);
+        }
+    }
 }

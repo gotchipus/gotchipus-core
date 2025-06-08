@@ -169,4 +169,10 @@ contract Modifier {
         require(sender == s.wearableDiamond, "LibAppStorage: Only wearable diamond");
         _;
     }
+
+    modifier ownedGotchi() {
+        address sender = LibMeta.msgSender();
+        require(s.balances[sender] != 0, "LibAppStorage: Not Owned Gotchipus");
+        _;
+    }
 }

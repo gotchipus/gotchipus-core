@@ -17,6 +17,7 @@ import { ERC6551Registry } from "../../src/ERC6551Registry.sol";
 import { ERC6551Account } from "../../src/ERC6551Account.sol";
 import { ERC6551Facet } from "../../src/facets/ERC6551Facet.sol";
 import { LibSvg } from "../../src/libraries/LibSvg.sol";
+import { FacetSelectors } from "./FacetSelectors.sol";
 
 contract DiamondFixture is Test {
     Diamond public diamond;
@@ -52,27 +53,27 @@ contract DiamondFixture is Test {
         facetCuts[0] = IDiamondCut.FacetCut({
             facetAddress: address(erc6551Facet),
             action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: getSelectors("ERC6551Facet")
+            functionSelectors: FacetSelectors.getSelectors("ERC6551Facet")
         });
         facetCuts[1] = IDiamondCut.FacetCut({
             facetAddress: address(hooksFacet),
             action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: getSelectors("HooksFacet")
+            functionSelectors: FacetSelectors.getSelectors("HooksFacet")
         });
         facetCuts[2] = IDiamondCut.FacetCut({
             facetAddress: address(gotchipusFacet),
             action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: getSelectors("GotchipusFacet")
+            functionSelectors: FacetSelectors.getSelectors("GotchipusFacet")
         });
         facetCuts[3] = IDiamondCut.FacetCut({
             facetAddress: address(attributesFacet),
             action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: getSelectors("AttributesFacet")
+            functionSelectors: FacetSelectors.getSelectors("AttributesFacet")
         });        
         facetCuts[4] = IDiamondCut.FacetCut({
             facetAddress: address(dnaFacet),
             action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: getSelectors("DNAFacet")
+            functionSelectors: FacetSelectors.getSelectors("DNAFacet")
         });
 
         bytes32[] memory svgTypes = new bytes32[](6);
@@ -115,59 +116,5 @@ contract DiamondFixture is Test {
         return traitsOffset;
     }
 
-    function getSelectors(string memory facetName) internal pure returns (bytes4[] memory) {
-        bytes4[] memory selectors;
 
-        if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("GotchipusFacet"))) {
-            selectors = new bytes4[](22);
-            selectors[0] = GotchipusFacet.balanceOf.selector;
-            selectors[1] = GotchipusFacet.ownerOf.selector;
-            selectors[2] = GotchipusFacet.totalSupply.selector;
-            selectors[3] = GotchipusFacet.tokenByIndex.selector;
-            selectors[4] = GotchipusFacet.tokenOfOwnerByIndex.selector;
-            selectors[5] = GotchipusFacet.allTokensOfOwner.selector;
-            selectors[6] = GotchipusFacet.name.selector;
-            selectors[7] = GotchipusFacet.symbol.selector;
-            selectors[8] = GotchipusFacet.tokenURI.selector;
-            selectors[9] = GotchipusFacet.getApproved.selector;
-            selectors[10] = GotchipusFacet.isApprovedForAll.selector;
-            selectors[11] = bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"));
-            selectors[12] = bytes4(keccak256("safeTransferFrom(address,address,uint256)"));
-            selectors[13] = GotchipusFacet.transferFrom.selector;
-            selectors[14] = GotchipusFacet.approve.selector;
-            selectors[15] = GotchipusFacet.setApprovalForAll.selector;
-            selectors[16] = GotchipusFacet.setBaseURI.selector;
-            selectors[17] = GotchipusFacet.mint.selector;
-            selectors[18] = GotchipusFacet.burn.selector;
-            selectors[19] = GotchipusFacet.summonGotchipus.selector;
-            selectors[20] = GotchipusFacet.addWhitelist.selector;
-            selectors[21] = GotchipusFacet.paused.selector;
-        } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("AttributesFacet"))) {
-            selectors = new bytes4[](8);
-            selectors[0] = AttributesFacet.aether.selector;
-            selectors[1] = AttributesFacet.bonding.selector;
-            selectors[2] = AttributesFacet.feed.selector;
-            selectors[3] = AttributesFacet.getTokenName.selector;
-            selectors[4] = AttributesFacet.growth.selector;
-            selectors[5] = AttributesFacet.pet.selector;
-            selectors[6] = AttributesFacet.setName.selector;
-            selectors[7] = AttributesFacet.wisdom.selector;
-        } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("DNAFacet"))) {
-            selectors = new bytes4[](4);
-            selectors[0] = DNAFacet.getGene.selector;
-            selectors[1] = DNAFacet.ruleVersion.selector;
-            selectors[2] = DNAFacet.setRuleVersion.selector;
-            selectors[3] = DNAFacet.tokenGeneSeed.selector;
-        } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("HooksFacet"))) {
-            selectors = new bytes4[](2);
-            selectors[0] = HooksFacet.addHook.selector;
-            selectors[1] = HooksFacet.getHooks.selector;
-        } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("ERC6551Facet"))) {
-            selectors = new bytes4[](2);
-            selectors[0] = ERC6551Facet.account.selector;
-            selectors[1] = ERC6551Facet.executeAccount.selector;
-        }
-
-        return selectors;
-    }
 }
