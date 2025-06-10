@@ -60,6 +60,11 @@ struct PaymasterConfig {
     mapping(bytes32 => bool) extTx;
 }
 
+struct EquipWearableType {
+    bytes32 wearableType;
+    uint256 wearableId;
+    bool equiped;
+}
 
 struct AppStorage {
     string name;
@@ -129,6 +134,10 @@ struct AppStorage {
 
     // add gotchipus traits index
     mapping(uint256 => uint8[]) allGotchiTraitsIndex;
+
+    // add equip wearable info
+    mapping(address => EquipWearableType[]) allOwnerEquipWearableType;
+    mapping(address => mapping(bytes32 => bool)) isOwnerEquipWearable;
 }
 
 

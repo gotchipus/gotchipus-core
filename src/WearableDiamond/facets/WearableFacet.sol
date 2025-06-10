@@ -19,6 +19,14 @@ contract WearableFacet {
         gFacet = GotchipusFacet(WearableLibDiamond.GOTCHIPUS_DIAMOND);
     }
 
+    function name() external pure returns (string memory) {
+        return "Gotchipus Wearables";
+    }
+
+    function symbol() external pure returns (string memory) {
+        return "GOTCHI-WEARABLE";
+    }
+
     function balanceOf(address owner, uint256 tokenId) external view returns (uint256 bn) {
         bn = gotchiWearableFacet().wearableBalanceOf(owner, tokenId);
     }

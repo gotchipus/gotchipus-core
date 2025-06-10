@@ -84,6 +84,7 @@ library FacetSelectors {
             // selectors[12] = GotchiWearableFacet.claimWearable.selector;
             // selectors[13] = GotchiWearableFacet.getWearableInfo.selector;
             // selectors[14] = GotchiWearableFacet.simpleEquipWearable.selector;
+            // selectors[15] = GotchiWearableFacet.getAllEquipWearableType.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("SvgFacet"))) {
             selectors = new bytes4[](6);
             selectors[0] = SvgFacet.getSvg.selector;

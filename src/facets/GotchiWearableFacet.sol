@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { Modifier, WearableInfo } from "../libraries/LibAppStorage.sol";
+import { Modifier, WearableInfo, EquipWearableType } from "../libraries/LibAppStorage.sol";
 import { LibStrings } from "../libraries/LibStrings.sol";
+import { LibSvg } from "../libraries/LibSvg.sol";
 import { LibERC1155 } from "../WearableDiamond/libraries/LibERC1155.sol";
 import { IWearableFacet } from "../WearableDiamond/interfaces/IWearableFacet.sol";
 
@@ -37,6 +38,11 @@ contract GotchiWearableFacet is Modifier {
 
     function getWearableInfo(uint256 tokenId) external view returns (WearableInfo memory info_) {
         info_ = s.wearableInfo[tokenId];
+    }
+
+    function getAllEquipWearableType(uint256 gotchiTokenId) external view returns (EquipWearableType[] memory ew_) {
+        address account = s.accountOwnedByTokenId[gotchiTokenId];
+        ew_ = s.allOwnerEquipWearableType[account];
     }
 
     function setWearableUri(uint256 tokenId, string memory tokenUri) external onlyOwner {
@@ -145,7 +151,7 @@ contract GotchiWearableFacet is Modifier {
         s.isAnyEquipWearable[gotchiTokenId] = true;
     }
 
-    function simpleEquipWearable(uint256 gotchiTokenId, uint256 wearableTokenId) external {
+    function simpleEquipWearable(uint256 gotchiTokenId, uint256 wearableTokenId, bytes32 wearableType) external {
         require(s.ownerWearableBalances[msg.sender][wearableTokenId] > 0, "Wearable: Insufficient balance");
         s.isEquipWearableByIndex[gotchiTokenId][wearableTokenId] = true;
         s.isAnyEquipWearable[gotchiTokenId] = true;
@@ -153,6 +159,21 @@ contract GotchiWearableFacet is Modifier {
         address account = s.accountOwnedByTokenId[gotchiTokenId];
         s.ownerWearableBalances[msg.sender][wearableTokenId] -= 1;
         s.ownerWearableBalances[account][wearableTokenId] += 1;
+        
+        bool isEquip = s.isOwnerEquipWearable[account][wearableType];
+        if (!isEquip) {
+            s.allOwnerEquipWearableType[account].push(EquipWearableType({
+                wearableType: wearableType,
+                wearableId: wearableTokenId,
+                equiped: true
+            }));
+            s.isOwnerEquipWearable[account][wearableType] = true;
+        } else {
+            uint256 typeIndex = getWearbaleTypeIndex(wearableType);
+            EquipWearableType storage wearableToModify = s.allOwnerEquipWearableType[account][typeIndex];
+            wearableToModify.wearableId = wearableTokenId;
+        }
+
         emit IWearableFacet.TransferSingle(msg.sender, msg.sender, account, wearableTokenId, 1);
     }
 
@@ -160,6 +181,22 @@ contract GotchiWearableFacet is Modifier {
         for (uint256 i = 0; i < 27; i++) {
             s.ownerWearableBalances[msg.sender][i] += 1;
             emit IWearableFacet.TransferSingle(msg.sender, address(0), msg.sender, i, 1);
+        }
+    }
+
+    function getWearbaleTypeIndex(bytes32 wearableType) internal pure returns (uint256) {
+        if (wearableType == LibSvg.SVG_TYPE_BODY) {
+            return 1;
+        } else if (wearableType == LibSvg.SVG_TYPE_EYE) {
+            return 2;
+        } else if (wearableType == LibSvg.SVG_TYPE_HAND) {
+            return 3;
+        } else if (wearableType == LibSvg.SVG_TYPE_HEAD) {
+            return 4;
+        } else if (wearableType == LibSvg.SVG_TYPE_CLOTHES) {
+            return 5;
+        } else {
+            return 0;
         }
     }
 }
