@@ -18,6 +18,10 @@ import { ERC6551Account } from "../../src/ERC6551Account.sol";
 import { ERC6551Facet } from "../../src/facets/ERC6551Facet.sol";
 import { LibSvg } from "../../src/libraries/LibSvg.sol";
 import { FacetSelectors } from "./FacetSelectors.sol";
+import { GotchiWearableFacet } from "../../src/facets/GotchiWearableFacet.sol";
+import { SvgFacet } from "../../src/facets/SvgFacet.sol";
+import { ALICE } from "./Constants.sol";
+
 
 contract DiamondFixture is Test {
     Diamond public diamond;
@@ -32,6 +36,8 @@ contract DiamondFixture is Test {
     ERC6551Facet public erc6551Facet;
     ERC6551Account public erc6551Account;
     ERC6551Registry public erc6551Registry;
+    GotchiWearableFacet public gotchiWearableFacet;
+    SvgFacet public svgFacet;
 
     address internal owner = address(this);
     
@@ -47,9 +53,11 @@ contract DiamondFixture is Test {
         erc6551Facet = new ERC6551Facet();
         erc6551Account = new ERC6551Account();
         erc6551Registry = new ERC6551Registry();
+        gotchiWearableFacet = new GotchiWearableFacet();
+        svgFacet = new SvgFacet();
 
         diamond = new Diamond(owner, address(cutFacet), address(loupeFacet), address(ownershipFacet));
-        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](5);
+        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](6);
         facetCuts[0] = IDiamondCut.FacetCut({
             facetAddress: address(erc6551Facet),
             action: IDiamondCut.FacetCutAction.Add,
@@ -74,6 +82,11 @@ contract DiamondFixture is Test {
             facetAddress: address(dnaFacet),
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: FacetSelectors.getSelectors("DNAFacet")
+        });
+        facetCuts[5] = IDiamondCut.FacetCut({
+            facetAddress: address(svgFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: FacetSelectors.getSelectors("SvgFacet")
         });
 
         bytes32[] memory svgTypes = new bytes32[](6);

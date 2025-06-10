@@ -16,7 +16,7 @@ library FacetSelectors {
         bytes4[] memory selectors;
 
         if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("GotchipusFacet"))) {
-            selectors = new bytes4[](23);
+            selectors = new bytes4[](24);
             selectors[0] = GotchipusFacet.balanceOf.selector;
             selectors[1] = GotchipusFacet.ownerOf.selector;
             selectors[2] = GotchipusFacet.totalSupply.selector;
@@ -40,6 +40,7 @@ library FacetSelectors {
             selectors[20] = GotchipusFacet.addWhitelist.selector;
             selectors[21] = GotchipusFacet.paused.selector;
             selectors[22] = GotchipusFacet.ownedTokenInfo.selector;
+            selectors[23] = GotchipusFacet.getGotchiTraitsIndex.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("AttributesFacet"))) {
             selectors = new bytes4[](8);
             selectors[0] = AttributesFacet.aether.selector;
@@ -66,7 +67,7 @@ library FacetSelectors {
             selectors[0] = ERC6551Facet.account.selector;
             selectors[1] = ERC6551Facet.executeAccount.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("GotchiWearableFacet"))) {
-            selectors = new bytes4[](13);
+            selectors = new bytes4[](15);
             selectors[0] = GotchiWearableFacet.wearableBalanceOf.selector;
             selectors[1] = GotchiWearableFacet.wearableBalanceOfBatch.selector;
             selectors[2] = GotchiWearableFacet.wearableUri.selector;
@@ -80,14 +81,16 @@ library FacetSelectors {
             selectors[10] = GotchiWearableFacet.setWearableDiamond.selector;
             selectors[11] = GotchiWearableFacet.equipWearable.selector;
             selectors[12] = GotchiWearableFacet.claimWearable.selector;
+            selectors[13] = GotchiWearableFacet.getWearableInfo.selector;
+            selectors[14] = GotchiWearableFacet.simpleEquipWearable.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("SvgFacet"))) {
-            selectors = new bytes4[](1);
-            // selectors[0] = SvgFacet.getSvg.selector;
-            // selectors[1] = SvgFacet.getSliceSvgs.selector;
-            // selectors[2] = SvgFacet.getSliceSvg.selector;
-            // selectors[3] = SvgFacet.storeSvg.selector;
-            // selectors[4] = SvgFacet.updateSvg.selector;
-            selectors[0] = SvgFacet.getGotchipusSvg.selector;
+            selectors = new bytes4[](6);
+            selectors[0] = SvgFacet.getSvg.selector;
+            selectors[1] = SvgFacet.getSliceSvgs.selector;
+            selectors[2] = SvgFacet.getSliceSvg.selector;
+            selectors[3] = SvgFacet.storeSvg.selector;
+            selectors[4] = SvgFacet.updateSvg.selector;
+            selectors[5] = SvgFacet.getGotchipusSvg.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("PaymasterFacet"))) {
             selectors = new bytes4[](5);
             selectors[0] = PaymasterFacet.getNonce.selector;

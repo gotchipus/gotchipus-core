@@ -126,6 +126,9 @@ struct AppStorage {
     mapping(uint256 => bool) isAnyEquipWearable;
     uint256 nextWearableTokenId;
     string wearableBaseUri;
+
+    // add gotchipus traits index
+    mapping(uint256 => uint8[]) allGotchiTraitsIndex;
 }
 
 

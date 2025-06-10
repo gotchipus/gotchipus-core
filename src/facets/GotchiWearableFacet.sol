@@ -35,6 +35,10 @@ contract GotchiWearableFacet is Modifier {
         return tokenUri;
     }
 
+    function getWearableInfo(uint256 tokenId) external view returns (WearableInfo memory info_) {
+        info_ = s.wearableInfo[tokenId];
+    }
+
     function setWearableUri(uint256 tokenId, string memory tokenUri) external onlyOwner {
         s.wearableUri[tokenId] = tokenUri;
         emit WearableURI(tokenId, tokenUri);
@@ -139,6 +143,17 @@ contract GotchiWearableFacet is Modifier {
         
         s.isEquipWearableByIndex[gotchiTokenId][wearableTokenId] = true;
         s.isAnyEquipWearable[gotchiTokenId] = true;
+    }
+
+    function simpleEquipWearable(uint256 gotchiTokenId, uint256 wearableTokenId) external {
+        require(s.ownerWearableBalances[msg.sender][wearableTokenId] > 0, "Wearable: Insufficient balance");
+        s.isEquipWearableByIndex[gotchiTokenId][wearableTokenId] = true;
+        s.isAnyEquipWearable[gotchiTokenId] = true;
+
+        address account = s.accountOwnedByTokenId[gotchiTokenId];
+        s.ownerWearableBalances[msg.sender][wearableTokenId] -= 1;
+        s.ownerWearableBalances[account][wearableTokenId] += 1;
+        emit IWearableFacet.TransferSingle(msg.sender, msg.sender, account, wearableTokenId, 1);
     }
 
     function claimWearable() external ownedGotchi {

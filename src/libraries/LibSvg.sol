@@ -7,7 +7,7 @@ import { LibStrings } from "./LibStrings.sol";
 library LibSvg {
     uint256 internal constant MAX_SIZE = 24_576;
     uint256 internal constant MAX_NUM_PER_TRAITS = 255;
-    uint256 internal constant MAX_BODY_NUM = 2;
+    uint256 internal constant MAX_BODY_NUM = 3;
     uint256 internal constant MAX_TRAITS_NUM = 6; // add more on mainnet 
     bytes32 internal constant SVG_TYPE_PHAROS = "gotchipus-pharos";
     bytes32 internal constant SVG_TYPE_BG = "gotchipus-bg";

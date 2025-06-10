@@ -237,7 +237,11 @@ contract GotchipusFacet is Modifier {
         for (uint256 i = 0; i < LibSvg.MAX_TRAITS_NUM; i++) {
             uint256 index = block.timestamp % 10;
             s.gotchiTraitsIndex[tokenId][uint8(i)] = uint8(index);
+            s.allGotchiTraitsIndex[tokenId].push(uint8(index));
         }
     }
 
+    function getGotchiTraitsIndex(uint256 tokenId) external view returns (uint8[] memory indexs) {
+        indexs = s.allGotchiTraitsIndex[tokenId];
+    }
 }

@@ -19,4 +19,5 @@ interface IGotchipusFacet is IERC721, IERC721Enumerable, IERC721Metadata {
     function summonGotchipus(SummonArgs calldata _args) external payable;
     function addWhitelist(address[] calldata _whitelists, bool[] calldata _isWhitelists) external;
     function paused(bool _paused) external;
+    function getGotchiTraitsIndex(uint256 tokenId) external view returns (uint8[] memory);
 }
