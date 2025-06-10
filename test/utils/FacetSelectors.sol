@@ -67,7 +67,7 @@ library FacetSelectors {
             selectors[0] = ERC6551Facet.account.selector;
             selectors[1] = ERC6551Facet.executeAccount.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("GotchiWearableFacet"))) {
-            selectors = new bytes4[](15);
+            selectors = new bytes4[](12);
             selectors[0] = GotchiWearableFacet.wearableBalanceOf.selector;
             selectors[1] = GotchiWearableFacet.wearableBalanceOfBatch.selector;
             selectors[2] = GotchiWearableFacet.wearableUri.selector;
@@ -80,9 +80,10 @@ library FacetSelectors {
             selectors[9] = GotchiWearableFacet.createBatchWearable.selector;
             selectors[10] = GotchiWearableFacet.setWearableDiamond.selector;
             selectors[11] = GotchiWearableFacet.equipWearable.selector;
-            selectors[12] = GotchiWearableFacet.claimWearable.selector;
-            selectors[13] = GotchiWearableFacet.getWearableInfo.selector;
-            selectors[14] = GotchiWearableFacet.simpleEquipWearable.selector;
+            // new add
+            // selectors[12] = GotchiWearableFacet.claimWearable.selector;
+            // selectors[13] = GotchiWearableFacet.getWearableInfo.selector;
+            // selectors[14] = GotchiWearableFacet.simpleEquipWearable.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("SvgFacet"))) {
             selectors = new bytes4[](6);
             selectors[0] = SvgFacet.getSvg.selector;

@@ -157,7 +157,7 @@ contract GotchiWearableFacet is Modifier {
     }
 
     function claimWearable() external ownedGotchi {
-        for (uint256 i = 0; i < 4; i++) {
+        for (uint256 i = 0; i < 27; i++) {
             s.ownerWearableBalances[msg.sender][i] += 1;
             emit IWearableFacet.TransferSingle(msg.sender, address(0), msg.sender, i, 1);
         }

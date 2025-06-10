@@ -234,10 +234,18 @@ contract GotchipusFacet is Modifier {
     }
 
     function randomTraitsIndex(uint256 tokenId) internal {
+        bytes32 seed = keccak256(abi.encodePacked(
+            tokenId,
+            block.timestamp,
+            block.prevrandao
+        ));
+
         for (uint256 i = 0; i < LibSvg.MAX_TRAITS_NUM; i++) {
-            uint256 index = block.timestamp % 10;
-            s.gotchiTraitsIndex[tokenId][uint8(i)] = uint8(index);
-            s.allGotchiTraitsIndex[tokenId].push(uint8(index));
+            seed = keccak256(abi.encodePacked(seed, i));
+            uint8 index = uint8(uint256(seed) % 10);
+
+            s.gotchiTraitsIndex[tokenId][uint8(i)] = index;
+            s.allGotchiTraitsIndex[tokenId].push(index);
         }
     }
 
