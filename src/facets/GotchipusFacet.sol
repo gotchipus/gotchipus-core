@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { AppStorage, Modifier, GotchipusInfo } from "../libraries/LibAppStorage.sol";
+import { AppStorage, Modifier, GotchipusInfo, EquipWearableType } from "../libraries/LibAppStorage.sol";
 import { IERC721Receiver } from "../interfaces/IERC721Receiver.sol";
 import { IERC721Enumerable } from "../interfaces/IERC721Enumerable.sol";
 import { IERC721 } from "../interfaces/IERC721.sol";
@@ -191,10 +191,30 @@ contract GotchipusFacet is Modifier {
         _ownedPus.status = 1;
         _ownedPus.story = _args.story;
         s.accountOwnedByTokenId[_args.gotchipusTokenId] = account;
-        randomTraitsIndex(_args.gotchipusTokenId);
+        
+        uint8[] memory indexs = randomTraitsIndex(_args.gotchipusTokenId);
         
         uint256 packed = LibDna.computePacked(_args.gotchipusTokenId);
         LibDna.setPacked(_args.gotchipusTokenId, packed);
+
+        s.allOwnerEquipWearableType[account].push(EquipWearableType({
+            wearableType: LibSvg.SVG_TYPE_BG,
+            wearableId: indexs[0],
+            equiped: true
+        }));
+        s.allOwnerEquipWearableType[account].push(EquipWearableType({
+            wearableType: LibSvg.SVG_TYPE_BODY,
+            wearableId: indexs[1] + 9,
+            equiped: true
+        }));
+        s.allOwnerEquipWearableType[account].push(EquipWearableType({
+            wearableType: LibSvg.SVG_TYPE_EYE,
+            wearableId: indexs[2] + 18,
+            equiped: true
+        }));
+        s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_BG] = true;
+        s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_BODY] = true;
+        s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_EYE] = true;
     }
 
     function addWhitelist(address[] calldata _whitelists, bool[] calldata _isWhitelists) external onlyOwner {
@@ -233,17 +253,17 @@ contract GotchipusFacet is Modifier {
         require(LibERC721._checkOnERC721Received(_from, _to, _tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
-    function randomTraitsIndex(uint256 tokenId) internal {
+    function randomTraitsIndex(uint256 tokenId) internal returns (uint8[] memory indexs_) {
         bytes32 seed = keccak256(abi.encodePacked(
             tokenId,
             block.timestamp,
             block.prevrandao
         ));
 
-        for (uint256 i = 0; i < LibSvg.MAX_TRAITS_NUM; i++) {
+        for (uint256 i = 0; i < LibSvg.MAX_BODY_NUM; i++) {
             seed = keccak256(abi.encodePacked(seed, i));
             uint8 index = uint8(uint256(seed) % 10);
-
+            indexs_[i] = index;
             s.gotchiTraitsIndex[tokenId][uint8(i)] = index;
             s.allGotchiTraitsIndex[tokenId].push(index);
         }

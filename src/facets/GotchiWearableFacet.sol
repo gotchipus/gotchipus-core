@@ -174,11 +174,55 @@ contract GotchiWearableFacet is Modifier {
             wearableToModify.wearableId = wearableTokenId;
         }
 
+        uint8 svgTypeIndex;
+        uint256 svgTypeOffset;
+        if (wearableType == LibSvg.SVG_TYPE_HAND) {
+            svgTypeIndex = 3;
+            svgTypeOffset = 27;
+        } else if (wearableType == LibSvg.SVG_TYPE_HEAD) {
+            svgTypeIndex = 4;
+            svgTypeOffset = 36;
+        } else if (wearableType == LibSvg.SVG_TYPE_CLOTHES) {
+            svgTypeIndex = 5;
+            svgTypeOffset = 45;
+        }
+        
+        uint8 svgIndex = uint8(wearableTokenId - svgTypeOffset);
+        s.gotchiTraitsIndex[gotchiTokenId][svgTypeIndex] = svgIndex;
+        s.allGotchiTraitsIndex[gotchiTokenId].push(svgIndex);
+
+        if (!s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_BG]) {
+            s.allOwnerEquipWearableType[account].push(EquipWearableType({
+                wearableType: LibSvg.SVG_TYPE_BG,
+                wearableId: s.gotchiTraitsIndex[gotchiTokenId][0],
+                equiped: true
+            }));
+            s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_BG] = true;
+        }
+
+        if (!s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_BODY]) {
+            s.allOwnerEquipWearableType[account].push(EquipWearableType({
+                wearableType: LibSvg.SVG_TYPE_BODY,
+                wearableId: s.gotchiTraitsIndex[gotchiTokenId][1] + 9,
+                equiped: true
+            }));
+            s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_BODY] = true;
+        }
+
+        if (!s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_EYE]) {
+            s.allOwnerEquipWearableType[account].push(EquipWearableType({
+                wearableType: LibSvg.SVG_TYPE_EYE,
+                wearableId: s.gotchiTraitsIndex[gotchiTokenId][2] + 18,
+                equiped: true
+            }));
+            s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_EYE] = true;
+        }      
+
         emit IWearableFacet.TransferSingle(msg.sender, msg.sender, account, wearableTokenId, 1);
     }
 
     function claimWearable() external ownedGotchi {
-        for (uint256 i = 0; i < 27; i++) {
+        for (uint256 i = 27; i < 54; i++) {
             s.ownerWearableBalances[msg.sender][i] += 1;
             emit IWearableFacet.TransferSingle(msg.sender, address(0), msg.sender, i, 1);
         }
