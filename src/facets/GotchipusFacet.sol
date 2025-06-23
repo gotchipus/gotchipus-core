@@ -260,9 +260,12 @@ contract GotchipusFacet is Modifier {
             block.prevrandao
         ));
 
+        indexs_ = new uint8[](LibSvg.MAX_BODY_NUM);
+
         for (uint256 i = 0; i < LibSvg.MAX_BODY_NUM; i++) {
             seed = keccak256(abi.encodePacked(seed, i));
             uint8 index = uint8(uint256(seed) % 10);
+            index = index == 9 ? index - 1 : index;
             indexs_[i] = index;
             s.gotchiTraitsIndex[tokenId][uint8(i)] = index;
             s.allGotchiTraitsIndex[tokenId].push(index);

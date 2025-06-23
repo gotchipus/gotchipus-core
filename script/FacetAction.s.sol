@@ -20,11 +20,11 @@ contract FacetAction is Script {
 
         GotchipusFacet gotchipusFacet = new GotchipusFacet();
         // SvgFacet svgFacet = new SvgFacet();
-        GotchiWearableFacet gotchiWearableFacet = new GotchiWearableFacet();
+        // GotchiWearableFacet gotchiWearableFacet = new GotchiWearableFacet();
         // TimeFacet timeFacet = new TimeFacet();
         Diamond diamond = Diamond(payable(0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8));
 
-        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](2);
+        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](1);
         bytes4[] memory newSelectors = new bytes4[](1);
         newSelectors[0] = GotchipusFacet.summonGotchipus.selector;
 
@@ -50,14 +50,14 @@ contract FacetAction is Script {
         //     functionSelectors: wearableToReplace
         // });
 
-        bytes4[] memory wearableToReplace = new bytes4[](1);
-        wearableToReplace[0] = GotchiWearableFacet.simpleEquipWearable.selector;
+        // bytes4[] memory wearableToReplace = new bytes4[](1);
+        // wearableToReplace[0] = GotchiWearableFacet.claimWearable.selector;
 
-        facetCuts[1] = IDiamondCut.FacetCut({
-            facetAddress: address(gotchiWearableFacet),
-            action: IDiamondCut.FacetCutAction.Replace,
-            functionSelectors: wearableToReplace
-        });
+        // facetCuts[0] = IDiamondCut.FacetCut({
+        //     facetAddress: address(gotchiWearableFacet),
+        //     action: IDiamondCut.FacetCutAction.Replace,
+        //     functionSelectors: wearableToReplace
+        // });
         // facetCuts[2] = IDiamondCut.FacetCut({
         //     facetAddress: address(timeFacet),
         //     action: IDiamondCut.FacetCutAction.Add,
