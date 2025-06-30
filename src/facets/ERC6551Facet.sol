@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { AppStorage, Modifier } from "../libraries/LibAppStorage.sol";
 import { IERC6551Executable } from "../interfaces/IERC6551Executable.sol";
+import { IHook } from "../interfaces/IHook.sol";
+import { LibHooks } from "../libraries/LibHooks.sol";
 
-contract ERC6551Facet is Modifier {
+contract ERC6551Facet is Modifier, ReentrancyGuard {
     error AccountExecuteRevert();
 
     function account(uint256 tokenId) external view returns (address) {
@@ -12,14 +15,31 @@ contract ERC6551Facet is Modifier {
     }
 
     function executeAccount(
-        address acc,
-        uint256 tokenId, 
-        address to, 
-        uint256 value, 
-        bytes calldata data
-    ) external onlyOwnerOrPaymaster(tokenId) returns (bytes memory result) {
+        address _account,
+        uint256 _tokenId, 
+        address _to, 
+        uint256 _value, 
+        bytes calldata _data
+    ) external onlyOwnerOrPaymaster(_tokenId) nonReentrant returns (bytes memory result) {
+        require(_account != address(0), "ERC6551Facet: Invalid account");
+        require(_to != address(0), "ERC6551Facet: Invalid to");
+
+        IHook.HookParams memory params = IHook.HookParams({
+            tokenId: _tokenId,
+            account: _account,
+            caller: msg.sender,
+            to: _to,
+            value: _value,
+            selector: bytes4(_data),
+            hookData: _data,
+            success: false,
+            returnData: bytes("")
+        });
+
+        LibHooks.runHooks(_tokenId, IHook.GotchiEvent.BeforeExecute, params);
+
         bool success;
-        (success, result) = acc.call(abi.encodeWithSignature("execute(address,uint256,bytes,uint8)", to, value, data, 0));
+        (success, result) = _account.call(abi.encodeWithSignature("execute(address,uint256,bytes,uint8)", _to, _value, _data, 0));
         if (success && result.length > 0) {
             (result) = abi.decode(result, (bytes));
         } else if (result.length > 0) {
@@ -30,5 +50,10 @@ contract ERC6551Facet is Modifier {
         } else if (!success) {
             revert AccountExecuteRevert();
         }
+
+        params.success = success;
+        params.returnData = result;
+
+        LibHooks.runHooks(_tokenId, IHook.GotchiEvent.AfterExecute, params);
     }
 }

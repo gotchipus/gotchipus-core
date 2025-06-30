@@ -21,7 +21,7 @@ contract InitDiamond {
         TraitsOffset[] traitsOffset;
         address erc6551Registry;
         address erc6551AccountImplementation;
-        bytes32[] svgTypes;
+        bytes32[6] svgTypes;
     }
 
 
@@ -35,7 +35,7 @@ contract InitDiamond {
         s.erc6551Registry = _args.erc6551Registry;
         s.erc6551Implementation = _args.erc6551AccountImplementation;
         
-        for (uint256 i = 0; i < LibSvg.MAX_TRAITS_NUM; i++) {
+        for (uint256 i = 0; i < _args.svgTypes.length; i++) {
             s.svgTypeBytes32[uint8(i)] = _args.svgTypes[i];
         }
 

@@ -25,22 +25,22 @@ contract FacetAction is Script {
         Diamond diamond = Diamond(payable(0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8));
 
         IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](1);
-        bytes4[] memory newSelectors = new bytes4[](1);
-        newSelectors[0] = GotchipusFacet.summonGotchipus.selector;
+        // bytes4[] memory newSelectors = new bytes4[](1);
+        // newSelectors[0] = GotchipusFacet.getGotchiTraitsIndex.selector;
 
+        // facetCuts[0] = IDiamondCut.FacetCut({
+        //     facetAddress: address(gotchipusFacet),
+        //     action: IDiamondCut.FacetCutAction.Add,
+        //     functionSelectors: newSelectors
+        // });
+
+        bytes4[] memory svgToReplace = new bytes4[](1);
+        svgToReplace[0] = SvgFacet.getGotchipusSvg.selector;
         facetCuts[0] = IDiamondCut.FacetCut({
             facetAddress: address(gotchipusFacet),
             action: IDiamondCut.FacetCutAction.Replace,
-            functionSelectors: newSelectors
+            functionSelectors: FacetSelectors.getSelectors("GotchipusFacet")
         });
-
-        // bytes4[] memory svgToReplace = new bytes4[](1);
-        // svgToReplace[0] = SvgFacet.getGotchipusSvg.selector;
-        // facetCuts[1] = IDiamondCut.FacetCut({
-        //     facetAddress: address(svgFacet),
-        //     action: IDiamondCut.FacetCutAction.Replace,
-        //     functionSelectors: svgToReplace
-        // });
         // bytes4[] memory wearableToReplace = new bytes4[](1);
         // wearableToReplace[0] = GotchiWearableFacet.simpleEquipWearable.selector;
 

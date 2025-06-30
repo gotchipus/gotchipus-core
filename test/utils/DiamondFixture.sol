@@ -89,7 +89,7 @@ contract DiamondFixture is Test {
             functionSelectors: FacetSelectors.getSelectors("SvgFacet")
         });
 
-        bytes32[] memory svgTypes = new bytes32[](6);
+        bytes32[6] memory svgTypes;
         svgTypes[0] = LibSvg.SVG_TYPE_BG;
         svgTypes[1] = LibSvg.SVG_TYPE_BODY;
         svgTypes[2] = LibSvg.SVG_TYPE_EYE;

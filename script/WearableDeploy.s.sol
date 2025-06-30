@@ -48,5 +48,7 @@ contract WearableDeploy is Script {
         });
 
         IDiamondCut(address(wearableDiamond)).diamondCut(facetCuts, address(0), "");
+
+        vm.stopBroadcast();
     }
 }

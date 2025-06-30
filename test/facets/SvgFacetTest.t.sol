@@ -105,7 +105,7 @@ contract SvgFacetTest is DiamondFixture {
 
         IGotchipusFacet.SummonArgs memory args = IGotchipusFacet.SummonArgs({
             gotchipusTokenId: 0,
-            pusName: "Gotchi No.1",
+            gotchiName: "Gotchi No.1",
             collateralToken: address(0),
             stakeAmount: 0.1 ether,
             utc: 0,

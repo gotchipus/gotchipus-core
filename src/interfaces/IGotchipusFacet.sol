@@ -8,7 +8,7 @@ import { IERC721Enumerable } from "./IERC721Enumerable.sol";
 interface IGotchipusFacet is IERC721, IERC721Enumerable, IERC721Metadata {
     struct SummonArgs {
         uint256 gotchipusTokenId;
-        string pusName;
+        string gotchiName;
         address collateralToken;
         uint256 stakeAmount;
         uint8 utc;
@@ -20,4 +20,5 @@ interface IGotchipusFacet is IERC721, IERC721Enumerable, IERC721Metadata {
     function addWhitelist(address[] calldata _whitelists, bool[] calldata _isWhitelists) external;
     function paused(bool _paused) external;
     function getGotchiTraitsIndex(uint256 tokenId) external view returns (uint8[] memory);
+    function freeMint() external;
 }

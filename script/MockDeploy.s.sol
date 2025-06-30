@@ -20,9 +20,14 @@ import { SvgFacet } from "../src/facets/SvgFacet.sol";
 import { PaymasterFacet } from "../src/facets/PaymasterFacet.sol";
 import { LibSvg } from "../src/libraries/LibSvg.sol";
 import { FacetSelectors } from "../test/utils/FacetSelectors.sol";
+import { GotchiWearableFacet } from "../src/facets/GotchiWearableFacet.sol";
+import { WearableDiamond } from "../src/WearableDiamond/WearableDiamond.sol";
+import { WearableFacet } from "../src/WearableDiamond/facets/WearableFacet.sol";
+import { IGotchiWearableFacet } from "../src/interfaces/IGotchiWearableFacet.sol";
+import { IGotchipusFacet } from "../src/interfaces/IGotchipusFacet.sol";
 
 
-contract Deploy is Script {
+contract MockDeploy is Script {
     struct Deployment {
         Diamond diamond;
         InitDiamond initDiamond;
@@ -38,6 +43,8 @@ contract Deploy is Script {
         ERC6551Facet erc6551Facet;
         SvgFacet svgFacet;
         PaymasterFacet paymasterFacet;
+        GotchiWearableFacet gotchiWearableFacet;
+        WearableDiamond wearableDiamond;
     }
 
     function run() external returns (Deployment memory) {
@@ -45,35 +52,17 @@ contract Deploy is Script {
     }
 
     /** 
-     * Pharos testnet
-     * create2Factory: 0x000000f2529CaFE47f13BC4d674e343A97A870c1
-     * diamond: 0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8, 
-     * ERC6551Registry: 0x000000E7C8746fdB64D791f6bb387889c5291454
-     * ERC6551Account: 0xee8862134dFe901C62dbC72B25930da791a20CFf
-     * 
-     * initDiamond: 0xd7178B120D93cd975737902d8c8e46D430eBd502, 
-     * diamondCutFacet: 0xfb6CF9f914c76ccDc3Fc722b5c0D3EFa5C4F7DFA, 
-     * diamondLoupeFacet: 0xd87AC654aA730ca72681a3Aa29898a8F0ae0dd57, 
-     * gotchipusFacet: 0x450C122c5A317EFF2A7E0cb6AF65a483c2d530D7, 
-     * ownershipFacet: 0x705F094215317bAe890b78d1b374E66caa052c12, 
-     * attributesFacet: 0x14E66f0056b336a87Fd5Ae876a03b1a5fbdBDC66, 
-     * dnaFacet: 0x8A1B589729bC9e3F6C79940331EfC7a2bD83039d, 
-     * hooksFacet: 0xaf04Cb9171772d4E2a974393734CA6BD009ea56B, 
-     * svgFacet: 0x902ACfCcD0b5430Bc4A9a004cdBd53F2E0a6438d
-     * paymasterFacet: 0x75E7765769789DcF2E7392B648d292239aDb3f2C
-     * gotchiWearableFacet: 0x034e5b8F4675D8b21177a2bCa3dd2cAC9b927465
-     * TimeFacet: 0xf0B248C4141931D592eC5b28FDB60d3B893d4a23
+     * mock testnet
+     * diamond: 0x87858d49a56e15B9377A3896fD8CcEcaEa050336, 
      */
 
     function deploy() public returns (Deployment memory) {
         vm.startBroadcast();
-
-        // DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
-        // DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet();
-        // OwnershipFacet ownershipFacet = new OwnershipFacet();
-        DiamondCutFacet diamondCutFacet = DiamondCutFacet(0xfb6CF9f914c76ccDc3Fc722b5c0D3EFa5C4F7DFA);
-        DiamondLoupeFacet diamondLoupeFacet = DiamondLoupeFacet(0xd87AC654aA730ca72681a3Aa29898a8F0ae0dd57);
-        OwnershipFacet ownershipFacet = OwnershipFacet(0x705F094215317bAe890b78d1b374E66caa052c12);
+        address owner = msg.sender;
+        
+        DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
+        DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet();
+        OwnershipFacet ownershipFacet = new OwnershipFacet();
         InitDiamond initDiamond = new InitDiamond();
         GotchipusFacet gotchipusFacet = new GotchipusFacet();
         AttributesFacet attributesFacet = new AttributesFacet();
@@ -84,10 +73,11 @@ contract Deploy is Script {
         ERC6551Facet erc6551Facet = new ERC6551Facet();
         SvgFacet svgFacet = new SvgFacet();
         PaymasterFacet paymasterFacet = new PaymasterFacet();
+        GotchiWearableFacet gotchiWearableFacet = new GotchiWearableFacet();
 
-        // Diamond diamond = new Diamond(owner, address(diamondCutFacet), address(diamondLoupeFacet), address(ownershipFacet));
-        Diamond diamond = Diamond(payable(0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8));
-        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](7);
+        Diamond diamond = new Diamond(owner, address(diamondCutFacet), address(diamondLoupeFacet), address(ownershipFacet));
+
+        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](8);
         facetCuts[0] = IDiamondCut.FacetCut({
             facetAddress: address(erc6551Facet),
             action: IDiamondCut.FacetCutAction.Add,
@@ -123,14 +113,20 @@ contract Deploy is Script {
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: FacetSelectors.getSelectors("PaymasterFacet")
         });
+        facetCuts[7] = IDiamondCut.FacetCut({
+            facetAddress: address(gotchiWearableFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: FacetSelectors.getSelectors("GotchiWearableFacet")
+        });
 
-        bytes32[6] memory svgTypes;
-        svgTypes[0] = LibSvg.SVG_TYPE_BG;
-        svgTypes[1] = LibSvg.SVG_TYPE_BODY;
-        svgTypes[2] = LibSvg.SVG_TYPE_EYE;
-        svgTypes[3] = LibSvg.SVG_TYPE_HAND;
-        svgTypes[4] = LibSvg.SVG_TYPE_HEAD;
-        svgTypes[5] = LibSvg.SVG_TYPE_CLOTHES;
+        bytes32[6] memory svgTypes = [
+            LibSvg.SVG_TYPE_BG,
+            LibSvg.SVG_TYPE_BODY,
+            LibSvg.SVG_TYPE_EYE,
+            LibSvg.SVG_TYPE_HAND,
+            LibSvg.SVG_TYPE_HEAD,
+            LibSvg.SVG_TYPE_CLOTHES
+        ];
 
         InitDiamond.Args memory initArgs = InitDiamond.Args({
             name: "Gotchipus",
@@ -145,6 +141,54 @@ contract Deploy is Script {
         bytes memory initCalldata = abi.encodeWithSelector(InitDiamond.init.selector, initArgs);
 
         IDiamondCut(address(diamond)).diamondCut(facetCuts, address(initDiamond), initCalldata);
+
+        // wearable diamond
+        DiamondCutFacet wearableDiamondCutFacet = new DiamondCutFacet();
+        DiamondLoupeFacet wearableDiamondLoupeFacet = new DiamondLoupeFacet();
+        OwnershipFacet warableOwnershipFacet = new OwnershipFacet();
+        WearableFacet wearableFacet = new WearableFacet();
+
+        // 0x9C974DfA49fC46b05306E83a6afaB616dc781732
+        WearableDiamond wearableDiamond = new WearableDiamond(owner, address(wearableDiamondCutFacet), address(wearableDiamondLoupeFacet), address(warableOwnershipFacet));
+
+        bytes4[] memory wearableFacetFunctions = new bytes4[](10);
+        wearableFacetFunctions[0] = WearableFacet.name.selector;
+        wearableFacetFunctions[1] = WearableFacet.symbol.selector;
+        wearableFacetFunctions[2] = WearableFacet.balanceOf.selector;
+        wearableFacetFunctions[3] = WearableFacet.balanceOfBatch.selector;
+        wearableFacetFunctions[4] = WearableFacet.uri.selector;
+        wearableFacetFunctions[5] = WearableFacet.isApprovedForAll.selector;
+        wearableFacetFunctions[6] = WearableFacet.setApprovalForAll.selector;
+        wearableFacetFunctions[7] = WearableFacet.setBaseURI.selector;
+        wearableFacetFunctions[8] = WearableFacet.safeTransferFrom.selector;
+        wearableFacetFunctions[9] = WearableFacet.safeBatchTransferFrom.selector;
+
+        IDiamondCut.FacetCut[] memory wearableFacetCuts = new IDiamondCut.FacetCut[](1);
+        wearableFacetCuts[0] = IDiamondCut.FacetCut({
+            facetAddress: address(wearableFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: wearableFacetFunctions
+        });
+
+        IDiamondCut(address(wearableDiamond)).diamondCut(wearableFacetCuts, address(0), "");
+
+        // **************************************************** // 
+        //                  external call                       //
+        // **************************************************** //
+
+        // IGotchiWearableFacet(address(diamond)).setWearableDiamond(address(wearableDiamond));
+        // IGotchipusFacet(address(diamond)).freeMint();
+
+        // IGotchipusFacet.SummonArgs memory args = IGotchipusFacet.SummonArgs({
+        //     gotchipusTokenId: 0,
+        //     gotchiName: "Gotchi #1",
+        //     collateralToken: address(0),
+        //     stakeAmount: 0.001 ether,
+        //     utc: 0,
+        //     story: "0x"
+        // });
+
+        // IGotchipusFacet(address(diamond)).summonGotchipus{value: 0.001 ether}(args);
 
         vm.stopBroadcast();
 
@@ -162,7 +206,9 @@ contract Deploy is Script {
             erc6551Registry: erc6551Registry,
             erc6551Facet: erc6551Facet,
             svgFacet: svgFacet,
-            paymasterFacet: paymasterFacet
+            paymasterFacet: paymasterFacet,
+            gotchiWearableFacet: gotchiWearableFacet,
+            wearableDiamond: wearableDiamond
         });
     }
 

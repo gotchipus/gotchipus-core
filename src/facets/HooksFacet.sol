@@ -28,6 +28,10 @@ contract HooksFacet is Modifier {
         }
     }
 
+    function approvalHooks(uint256 tokenId, IHook hook, bool _permissions) external onlyGotchipusOwner(tokenId) {
+        s.isValidHook[tokenId][address(hook)] = _permissions;
+    }
+
     function getHooks(uint256 tokenId, IHook.GotchiEvent eventType) external view returns (address[] memory hooks) {
         hooks = s.tokenHooksByEvent[tokenId][eventType];
     }
