@@ -31,6 +31,10 @@ contract AttributesFacet is Modifier {
         emit SetName(newName);
     }
 
+    function getLastPetTime(uint256 tokenId) external view returns (uint32) {
+        return s.lastPetTime[tokenId];
+    }
+
     function getTokenName(uint256 gotchipusTokenId) external view returns (string memory) {
         return s.ownedGotchipusInfos[s.tokenOwners[gotchipusTokenId]][gotchipusTokenId].name;
     }

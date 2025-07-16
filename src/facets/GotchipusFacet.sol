@@ -275,4 +275,24 @@ contract GotchipusFacet is Modifier {
     function getGotchiTraitsIndex(uint256 tokenId) external view returns (uint8[] memory indexs) {
         indexs = s.allGotchiTraitsIndex[tokenId];
     }
+
+    function getGotchiOrPharosInfo(address owner, uint8 status) external view returns (uint256[] memory tokenIds) {
+        uint256[] storage allIds = s.ownerTokens[owner];
+        uint256 count;
+
+        for (uint256 i = 0; i < allIds.length; i++) {
+            if (s.ownedGotchipusInfos[owner][allIds[i]].status == status) {
+                count++;
+            }
+        }
+
+        tokenIds = new uint256[](count);
+        uint256 j;
+        for (uint256 i = 0; i < allIds.length; i++) {
+            uint256 id = allIds[i];
+            if (s.ownedGotchipusInfos[owner][id].status == status) {
+                tokenIds[j++] = id;
+            }
+        }
+    }
 }
