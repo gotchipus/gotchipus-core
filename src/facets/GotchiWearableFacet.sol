@@ -45,6 +45,10 @@ contract GotchiWearableFacet is Modifier {
         ew_ = s.allOwnerEquipWearableType[account];
     }
 
+    function getWearableDiamond() view external returns (address wd_) {
+        wd_ = s.wearableDiamond;
+    }
+
     function setWearableUri(uint256 tokenId, string memory tokenUri) external onlyOwner {
         s.wearableUri[tokenId] = tokenUri;
         emit WearableURI(tokenId, tokenUri);

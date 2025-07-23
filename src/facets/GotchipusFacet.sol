@@ -2,6 +2,7 @@
 pragma solidity ^0.8.29;
 
 import { AppStorage, Modifier, GotchipusInfo, EquipWearableType } from "../libraries/LibAppStorage.sol";
+import { LibGotchiConstants } from "../libraries/LibGotchiConstants.sol";
 import { IERC721Receiver } from "../interfaces/IERC721Receiver.sol";
 import { IERC721Enumerable } from "../interfaces/IERC721Enumerable.sol";
 import { IERC721 } from "../interfaces/IERC721.sol";
@@ -17,9 +18,6 @@ import { IGotchipusFacet } from "../interfaces/IGotchipusFacet.sol";
 import { IERC6551Registry } from "../interfaces/IERC6551Registry.sol";
 
 contract GotchipusFacet is Modifier {
-    uint256 constant PHAROS_PRICE = 0.04 ether;
-    uint256 constant MAX_TOTAL_SUPPLY = 20000;
-    uint256 constant MAX_PER_MINT = 30;
 
     struct SummonArgs {
         uint256 gotchipusTokenId;
@@ -87,6 +85,30 @@ contract GotchipusFacet is Modifier {
         return s.operatorApprovals[_owner][_operator];
     }
 
+    function getGotchiTraitsIndex(uint256 tokenId) external view returns (uint8[] memory indexs) {
+        indexs = s.allGotchiTraitsIndex[tokenId];
+    }
+
+    function getGotchiOrPharosInfo(address owner, uint8 status) external view returns (uint256[] memory tokenIds) {
+        uint256[] storage allIds = s.ownerTokens[owner];
+        uint256 count;
+
+        for (uint256 i = 0; i < allIds.length; i++) {
+            if (s.ownedGotchipusInfos[owner][allIds[i]].status == status) {
+                count++;
+            }
+        }
+
+        tokenIds = new uint256[](count);
+        uint256 j;
+        for (uint256 i = 0; i < allIds.length; i++) {
+            uint256 id = allIds[i];
+            if (s.ownedGotchipusInfos[owner][id].status == status) {
+                tokenIds[j++] = id;
+            }
+        }
+    }
+
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
         return
             interfaceId == type(IERC721Enumerable).interfaceId ||
@@ -137,18 +159,18 @@ contract GotchipusFacet is Modifier {
     }
 
     function mint(uint256 amount) external payable pharosMintIsPaused {
-        require(amount != 0 && amount <= MAX_PER_MINT, "Invalid amount");
+        require(amount != 0 && amount <= LibGotchiConstants.MAX_PER_MINT, "Invalid amount");
         bool isWhitelist = s.isWhitelist[msg.sender];
 
         if (isWhitelist) {
             uint256 tokenId = s.nextTokenId;
-            require(tokenId + 1 < MAX_TOTAL_SUPPLY, "MAX TOTAL SUPPLY");
+            require(tokenId + 1 < LibGotchiConstants.MAX_TOTAL_SUPPLY, "MAX TOTAL SUPPLY");
             s.nextTokenId++;
 
             LibERC721._mint(msg.sender, tokenId);
         } else {
-            require(amount * PHAROS_PRICE == msg.value, "Invalid value");
-            require(s.allTokens.length + amount <= MAX_TOTAL_SUPPLY, "MAX TOTAL SUPPLY");
+            require(amount * LibGotchiConstants.PHAROS_PRICE == msg.value, "Invalid value");
+            require(s.allTokens.length + amount <= LibGotchiConstants.MAX_TOTAL_SUPPLY, "MAX TOTAL SUPPLY");
 
             for (uint256 i = 0; i < amount; i++) {
                 uint256 tokenId = s.nextTokenId++;
@@ -179,14 +201,17 @@ contract GotchipusFacet is Modifier {
         GotchipusInfo storage _ownedPus = s.ownedGotchipusInfos[msg.sender][_args.gotchipusTokenId];
         _ownedPus.dna.geneSeed = randomDna;
         _ownedPus.dna.ruleVersion = s.dnaRuleVersion;
+        _ownedPus.dna.generation = 0;
         _ownedPus.name = _args.gotchiName;
         _ownedPus.uri = LibStrings.strWithUint(string.concat(s.baseUri, "gotchipus/"), _args.gotchipusTokenId);
         _ownedPus.owner = msg.sender;
         _ownedPus.collateral = _args.collateralToken;
-        _ownedPus.epoch = uint32(block.timestamp);
-        _ownedPus.utc = _args.utc;
-        _ownedPus.bonding = 50;
-        _ownedPus.aether = _getStableAether(_args.stakeAmount);
+        _ownedPus.birthTime = uint32(block.timestamp);
+        _ownedPus.timezone = _args.utc;
+        
+        _ownedPus.core.experience = 50;
+        _ownedPus.core.soul = _getStableAether(_args.stakeAmount);
+
         _ownedPus.singer = msg.sender;
         _ownedPus.status = 1;
         _ownedPus.story = _args.story;
@@ -227,7 +252,7 @@ contract GotchipusFacet is Modifier {
         s.isPaused = _paused;
     }
 
-    function _getStableAether(uint256 stakeAmount) internal pure returns (uint32) {
+    function _getStableAether(uint256 stakeAmount) internal pure returns (uint16) {
         uint256 formatAmount = stakeAmount / 10**18;
         if (formatAmount >= 1000) {
              return 100;
@@ -272,27 +297,4 @@ contract GotchipusFacet is Modifier {
         }
     }
 
-    function getGotchiTraitsIndex(uint256 tokenId) external view returns (uint8[] memory indexs) {
-        indexs = s.allGotchiTraitsIndex[tokenId];
-    }
-
-    function getGotchiOrPharosInfo(address owner, uint8 status) external view returns (uint256[] memory tokenIds) {
-        uint256[] storage allIds = s.ownerTokens[owner];
-        uint256 count;
-
-        for (uint256 i = 0; i < allIds.length; i++) {
-            if (s.ownedGotchipusInfos[owner][allIds[i]].status == status) {
-                count++;
-            }
-        }
-
-        tokenIds = new uint256[](count);
-        uint256 j;
-        for (uint256 i = 0; i < allIds.length; i++) {
-            uint256 id = allIds[i];
-            if (s.ownedGotchipusInfos[owner][id].status == status) {
-                tokenIds[j++] = id;
-            }
-        }
-    }
 }

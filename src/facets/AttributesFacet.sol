@@ -12,19 +12,9 @@ contract AttributesFacet is Modifier {
 
         GotchipusInfo storage pus = s.ownedGotchipusInfos[msg.sender][gotchipusTokenId];
         uint8 bond = bonding(gotchipusTokenId);
-        pus.bonding = (bond + 20 >= type(uint8).max) ? type(uint8).max : bond + 20;
-        pus.growth = (pus.growth + 20 >= type(uint32).max) ? type(uint32).max : pus.growth + 20;
-    }
-
-    function feed(uint256 gotchipusTokenId) external {
-        require(uint256(s.lastFeedTime[gotchipusTokenId]) + 3 hours <= block.timestamp, "gotchipus already feed");
-        s.lastFeedTime[gotchipusTokenId] = uint32(block.timestamp);
-
-        GotchipusInfo storage pus = s.ownedGotchipusInfos[msg.sender][gotchipusTokenId];
-        uint8 bond = bonding(gotchipusTokenId);
-        pus.bonding = (bond + 50 >= type(uint8).max) ? type(uint8).max : bond + 50;
-        pus.growth = (pus.growth + 50 >= type(uint32).max) ? type(uint32).max : pus.growth + 50;
-    }
+        pus.core.experience = (bond + 20 >= type(uint8).max) ? type(uint8).max : bond + 20;
+        pus.states.health = uint8((uint32(pus.states.health) + 20 >= type(uint32).max) ? type(uint32).max : uint32(pus.states.health) + 20);
+    }     
 
     function setName(string calldata newName, uint256 gotchipusTokenId) external onlyGotchipusOwner(gotchipusTokenId) {
         s.ownedGotchipusInfos[msg.sender][gotchipusTokenId].name = newName;
@@ -42,20 +32,7 @@ contract AttributesFacet is Modifier {
     function bonding(uint256 gotchipusTokenId) public view returns (uint8 bond) {
         uint256 elapsedTime = block.timestamp - uint256(s.lastPetTime[gotchipusTokenId]);
         uint256 secondsInDay = elapsedTime % 1 days;
-        bond = s.ownedGotchipusInfos[s.tokenOwners[gotchipusTokenId]][gotchipusTokenId].bonding - uint8(secondsInDay);
+        bond = uint8(secondsInDay);
+        // bond = s.ownedGotchipusInfos[s.tokenOwners[gotchipusTokenId]][gotchipusTokenId].bonding - uint8(secondsInDay);
     }
-
-    function growth(uint256 gotchipusTokenId) external view returns (uint32) {
-        return s.ownedGotchipusInfos[s.tokenOwners[gotchipusTokenId]][gotchipusTokenId].growth;
-    }
-
-    function wisdom(uint256 gotchipusTokenId) external view returns (uint8) {
-        return s.ownedGotchipusInfos[s.tokenOwners[gotchipusTokenId]][gotchipusTokenId].wisdom;
-    }
-        
-    function aether(uint256 gotchipusTokenId) external view returns (uint32) {
-        return s.ownedGotchipusInfos[s.tokenOwners[gotchipusTokenId]][gotchipusTokenId].aether;
-    }
-
-     
 }

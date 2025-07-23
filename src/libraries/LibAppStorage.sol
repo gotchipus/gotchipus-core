@@ -5,28 +5,97 @@ import { LibMeta } from "./LibMeta.sol";
 import { LibDiamond } from "./LibDiamond.sol";
 import { IHook } from "../interfaces/IHook.sol";
 import { LibTime } from "./LibTime.sol";
+import { LibFaction } from "./LibFaction.sol";
+import { LibDynamicStates } from "./LibDynamicStates.sol";
+
+struct GotchipusCore {
+    uint32 experience;
+    uint16 level;
+    uint8 evolution;
+    uint16 availablePoints;
+    uint16 power;
+    uint16 defense;
+    uint16 intelligence;
+    uint16 vitality;
+    uint16 agility;
+    uint16 luck;
+    uint32 soul;
+}
+
+struct FactionCore {
+    LibFaction.GotchiFaction primaryFaction;
+    LibFaction.GotchiAttributes dominantAttr;
+    uint8 factionPurity; // faction purity 0-100
+    uint8 attributeMastery; // 0-20
+    bool hasSecondaryFaction;
+    LibFaction.GotchiFaction secondaryFaction;
+    LibFaction.GotchiAttributes secondaryAttr;
+    uint8 secondaryRatio;
+}
+
+struct AttributeSpecialization {
+    uint8[9] masteryLevels;
+    uint16[6] combatBonus;
+    uint16[6] defenseBonus;
+    uint16[6] technologyBonus;
+    uint16[6] allocatedPoints;
+}
+
+struct StrategicStats {
+    uint16 leadership;
+    uint16 economics; 
+    uint16 technology;
+    uint16 warfare;   
+    uint16 foodProductionBonus;    
+    uint16 materialMiningBonus;    
+    uint16 energyEfficiencyBonus;  
+    uint16 researchSpeedBonus;     
+    uint16 constructionSpeedBonus; 
+    uint16 tradeIncomeBonus;       
+}
+
+struct EvolutionData {
+    uint8 currentStage;
+    uint32 evolutionExp;
+    bool canEvolve;
+    uint8[] evolutionHistory;
+    uint32[] evolutionDates; 
+    bool hasSpecialEvolution; 
+    uint8 specialEvolutionType;
+}
+
+struct LevelingSystem {
+    uint32 currentExp;     
+    uint32 requiredExp;    
+    uint32 totalExp;       
+    uint32 battleExp;      
+    uint32 buildingExp;    
+    uint32 interactionExp; 
+    uint32 questExp;       
+    uint16 expMultiplier;
+    uint32 lastExpGain;    
+}
 
 struct GotchipusInfo {
-    // nft info
     string name;
     string uri;
-    bytes story; // gotchi story background
+    bytes story;
     address owner;
     address collateral;
     uint256 collateralAmount;
-    uint256 level;
-    uint8 status; // 0 = pharos, 1 = summon
-    uint8 evolution;
+    uint8 status;
     bool locked;
-    uint32 epoch;
-    uint32 utc; // time zone
-    // attributes
+    uint32 birthTime;
+    uint8 timezone;
+    GotchipusCore core;
+    FactionCore faction;
+    AttributeSpecialization spec;
+    LibDynamicStates.DynamicStates states;
+    StrategicStats strategy;
+    EvolutionData evolution;
+    LevelingSystem leveling;
     DNAData dna;
-    uint8 bonding;
-    uint32 growth;
-    uint8 wisdom;
-    uint32 aether;
-    // erc6551 info
+    // erc6551
     address singer;
     uint256 nonces;
 }
@@ -40,8 +109,10 @@ struct WearableInfo {
 }
 
 struct DNAData {
-    uint256 geneSeed;
-    uint8 ruleVersion;
+    uint256 geneSeed;  
+    uint8 ruleVersion; 
+    uint8 rarity;
+    uint8 generation;  
 }
 
 struct TraitsOffset {
@@ -138,8 +209,15 @@ struct AppStorage {
     // add equip wearable info
     mapping(address => EquipWearableType[]) allOwnerEquipWearableType;
     mapping(address => mapping(bytes32 => bool)) isOwnerEquipWearable;
-}
 
+    /**
+     * We’ve added a pity system:
+     * RARE guaranteed after 15 pulls
+     * EPIC after 30
+     * LEGENDARY after 60
+     */
+    mapping(address => uint256) summonPityCount;
+}
 
 library LibAppStorage {
     function diamondStorage() internal pure returns (AppStorage storage ds) {

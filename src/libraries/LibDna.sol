@@ -2,19 +2,18 @@
 pragma solidity ^0.8.29;
 
 import { AppStorage, LibAppStorage, TraitsOffset } from "../libraries/LibAppStorage.sol";
+import { LibGotchiConstants } from "../libraries/LibGotchiConstants.sol";
 
 
 library LibDna {
     event SetRuleVersion(uint8 indexed ruleVersion);
-
-    uint256 constant TOTAL_GENES = 33000;
 
     function getRandomGene(bytes32 seed) internal pure returns (uint256) {
         return uint256(seed);
     }
 
     function getGene(uint256 gotchipusTokenId, uint256 index) internal view returns (uint256) {
-        require(index < TOTAL_GENES, "Invalid gene index");
+        require(index < LibGotchiConstants.TOTAL_GENES, "Invalid gene index");
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 geneSeed = s.ownedGotchipusInfos[s.tokenOwners[gotchipusTokenId]][gotchipusTokenId].dna.geneSeed;
