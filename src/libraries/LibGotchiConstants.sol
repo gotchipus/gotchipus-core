@@ -7,7 +7,10 @@ library LibGotchiConstants {
     uint256 constant TOTAL_GENES = 33000;
     uint8 constant MAX_PER_MINT = 30;
     
-    uint32 constant BASE_EXP = 100;
+    uint32 constant BASE_OFFSET = 50;
+    uint32 constant EXP_STEP = 5;
+    uint32 constant PRECISION = 1000000;
+    uint16 constant MIN_LEVEL = 1;
     uint16 constant MAX_LEVEL = 999;
     uint8 constant MAX_EVOLUTION = 8;
 
