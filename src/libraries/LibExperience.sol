@@ -2,6 +2,7 @@
 pragma solidity ^0.8.29;
 
 import { LibGotchiConstants } from "./LibGotchiConstants.sol";
+import { GotchipusInfo, AppStorage, LibAppStorage } from "./LibAppStorage.sol";
 
 library LibExperience {
 
@@ -71,5 +72,67 @@ library LibExperience {
         }
         
         return LibGotchiConstants.MAX_LEVEL;
+    }
+
+    /**
+     * Calculates total attribute points based on level and rarity.
+     * Includes:
+     * - Base Points:
+     * Levels 1–20: +3 per level  
+     * Levels 21–50: +2 per level  
+     * Levels 51–100: +1 per level  
+     * Levels 101+: +1 per 2 levels
+     * - Rarity Bonus (every 10 levels):
+     * common: +0, rare: +1, epic: +2, legendary: +3
+     * - Milestone Bonus:
+     * Every 25 levels: +5  
+     * Every 50 levels: +10 
+     * Every 100 levels: +20
+     */
+    function calculateSkillPoints(GotchipusInfo memory info, uint16 level) internal pure returns (uint16 point) {
+        uint8 rarity = info.dna.rarity;
+
+        if (level <= 20) {
+            point += 3;
+        } else if (level <= 50) {
+            point += 2;
+        } else if (level <= 100) {
+            point += 1;
+        } else if (level % 2 == 0) {
+            point += 1;
+        }
+
+        if (level % 100 == 0) {
+            point += 20;
+        } else if (level % 50 == 0) {
+            point += 10;
+        } else if (level % 25 == 0) {
+            point += 5;
+        } else if (level % 10 == 0) {
+            if (rarity == 1) {
+                point += 1;
+            } else if (rarity == 2) {
+                point += 2;
+            } else if (rarity == 3) {
+                point += 3;
+            }
+        }
+    }
+
+    function getAvailableSkillPoint(address sender, uint256 tokenId) internal view returns (uint16 point_) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        GotchipusInfo storage info = s.ownedGotchipusInfos[sender][tokenId];
+        point_ = info.core.availablePoints;
+    }
+
+    function getAllocatedSkillPoints(address sender, uint256 tokenId) internal view returns (uint16[6] memory point_) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        point_ = s.ownedGotchipusInfos[sender][tokenId].spec.allocatedPoints;
+    }
+
+    function getExperience(address sender, uint256 tokenId) internal view returns (uint32[3] memory exp_) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        GotchipusInfo storage info = s.ownedGotchipusInfos[sender][tokenId];
+        exp_ = [info.leveling.currentExp, info.leveling.requiredExp, info.leveling.totalExp];
     }
 }
