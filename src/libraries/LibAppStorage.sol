@@ -13,23 +13,23 @@ struct GotchipusCore {
     uint16 level;
     uint8 evolution;
     uint16 availablePoints;
-    uint16 power;
-    uint16 defense;
-    uint16 intelligence;
-    uint16 vitality;
-    uint16 agility;
-    uint16 luck;
+    uint32 strength;    // STR
+    uint32 defense;     // DEF
+    uint32 mind;        // INT
+    uint32 vitality;    // VIT 
+    uint32 agility;     // AGI
+    uint32 luck;        // LUK
     uint32 soul;
 }
 
 struct FactionCore {
-    LibFaction.GotchiFaction primaryFaction;
-    LibFaction.GotchiAttributes dominantAttr;
+    uint8 primaryFaction;
+    uint8 dominantAttr;
     uint8 factionPurity; // faction purity 0-100
     uint8 attributeMastery; // 0-20
     bool hasSecondaryFaction;
-    LibFaction.GotchiFaction secondaryFaction;
-    LibFaction.GotchiAttributes secondaryAttr;
+    uint8 secondaryFaction;
+    uint8 secondaryAttr;
     uint8 secondaryRatio;
 }
 

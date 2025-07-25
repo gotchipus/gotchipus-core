@@ -89,9 +89,7 @@ library LibExperience {
      * Every 50 levels: +10 
      * Every 100 levels: +20
      */
-    function calculateSkillPoints(GotchipusInfo memory info, uint16 level) internal pure returns (uint16 point) {
-        uint8 rarity = info.dna.rarity;
-
+    function calculateSkillPoints(uint8 rarity, uint16 level) internal pure returns (uint16 point) {
         if (level <= 20) {
             point += 3;
         } else if (level <= 50) {

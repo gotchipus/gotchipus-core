@@ -15,7 +15,11 @@ library LibGotchiConstants {
     uint8 constant MAX_EVOLUTION = 8;
 
     uint16 constant MAX_ATTRIBUTE = 800;
-    uint16 constant BASE_ATTRIBUTE = 10;
+    uint16 constant COMMON_ATTRIBUTE = 12;
+    uint16 constant RARE_ATTRIBUTE = 15;
+    uint16 constant EPIC_ATTRIBUTE = 18;
+    uint16 constant LEGENDARY_ATTRIBUTE = 22;
+    uint32 constant ATTRIBUTE_PRECISION = 100;
     uint8 constant MAX_PURITY = 100;
     uint8 constant MAX_MASTERY = 20;
 

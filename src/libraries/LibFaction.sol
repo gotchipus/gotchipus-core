@@ -2,6 +2,7 @@
 pragma solidity ^0.8.29;
 
 import { LibGotchiConstants } from "./LibGotchiConstants.sol";
+import { GotchipusInfo, AttributeSpecialization, FactionCore, AppStorage, LibAppStorage } from "./LibAppStorage.sol";
 
 library LibFaction {
     enum GotchiFaction {
@@ -25,35 +26,49 @@ library LibFaction {
         VOID
     }
 
-    function randomFaction(uint256 randomSeed) internal pure returns (uint8) {
-        uint256 randomValue = randomSeed % 10000;
-
-        if (randomValue < LibGotchiConstants.COMBAT_WEIGHT) {
-            return uint8(GotchiFaction.COMBAT);
-        } else if (randomValue < LibGotchiConstants.COMBAT_WEIGHT + LibGotchiConstants.DEFENSE_WEIGHT) {
-            return uint8(GotchiFaction.DEFENSE);
-        } else {
-            return uint8(GotchiFaction.TECHNOLOGY);
-        }
-    }
-
-    function randomAttributeByFaction(uint8 faction, uint256 randomSeed) internal pure returns (uint8) {
-        require(LibGotchiConstants.FACTION_COUNT > faction, "LibFaction: Invalid faction name");
-
-        uint256 randomValue = randomSeed % 3;
-
-        if (faction == uint8(GotchiFaction.COMBAT)) {
-            return uint8(randomValue);
-        } else if (faction == uint8(GotchiFaction.DEFENSE)) {
-            return uint8(3 + randomValue);
-        } else {
-            return uint8(6 + randomValue);
-        }
-    }
-
-    function attributeMastery(uint8 rarity, uint256 randomSeed) internal pure returns (uint8 mastery_) {
+    /**
+     * 
+     * Faction Bonuses:
+     * Combat: Strength: +15%, Agility: +8%
+     * Defense: Defense: +15%, Vitality: +8%
+     * Technology: mind: +15%, Luck: +8%
+     */
+    function randomFaction(address sender, uint256 tokenId, uint256 randomSeed, uint8 rarity) internal returns (uint8) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        GotchipusInfo storage info = s.ownedGotchipusInfos[sender][tokenId];
+        
+        uint256 randomFactionValue = randomSeed % 10000;
+        uint256 randomAttributeValue = randomSeed % 3;
         uint256 baseMastery = randomSeed % 2;
-        mastery_ = uint8(baseMastery) + rarity;
+        uint8 faction;
+        uint8 attr;
+        
+        if (randomFactionValue < LibGotchiConstants.COMBAT_WEIGHT) {
+            faction = 0;
+            attr = uint8(randomAttributeValue);
+            info.spec.combatBonus = [uint16(15), 0, 0, 0, 8, 0];
+        } else if (randomFactionValue < LibGotchiConstants.COMBAT_WEIGHT + LibGotchiConstants.DEFENSE_WEIGHT) {
+            faction = 1;
+            attr = uint8(3 + randomAttributeValue);
+            info.spec.defenseBonus = [uint16(0), 15, 0, 8, 0, 0];
+        } else {
+            faction = 2;
+            attr = uint8(6 + randomAttributeValue);
+            info.spec.technologyBonus = [uint16(0), 0, 15, 0, 0, 8];
+        }
+
+        info.faction = FactionCore({
+            primaryFaction: faction,
+            dominantAttr: attr,
+            factionPurity: 100,
+            attributeMastery: uint8(baseMastery) + rarity,
+            hasSecondaryFaction: false,
+            secondaryFaction: 0,
+            secondaryAttr: 0,
+            secondaryRatio: 0
+        });
+
+        return faction;
     }
 
     function getFactionName(uint8 faction_) internal pure returns (string memory) {
