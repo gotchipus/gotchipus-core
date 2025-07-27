@@ -44,16 +44,12 @@ library FacetSelectors {
             selectors[24] = GotchipusFacet.freeMint.selector;
             selectors[25] = GotchipusFacet.getGotchiOrPharosInfo.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("AttributesFacet"))) {
-            selectors = new bytes4[](9);
-            selectors[0] = AttributesFacet.aether.selector;
-            selectors[1] = AttributesFacet.bonding.selector;
-            selectors[2] = AttributesFacet.feed.selector;
-            selectors[3] = AttributesFacet.getTokenName.selector;
-            selectors[4] = AttributesFacet.growth.selector;
-            selectors[5] = AttributesFacet.pet.selector;
-            selectors[6] = AttributesFacet.setName.selector;
-            selectors[7] = AttributesFacet.wisdom.selector;
-            selectors[8] = AttributesFacet.getLastPetTime.selector;
+            selectors = new bytes4[](5);
+            selectors[0] = AttributesFacet.bonding.selector;
+            selectors[1] = AttributesFacet.getTokenName.selector;
+            selectors[2] = AttributesFacet.pet.selector;
+            selectors[3] = AttributesFacet.setName.selector;
+            selectors[4] = AttributesFacet.getLastPetTime.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("DNAFacet"))) {
             selectors = new bytes4[](4);
             selectors[0] = DNAFacet.getGene.selector;

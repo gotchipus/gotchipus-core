@@ -8,6 +8,13 @@ import { LibTime } from "./LibTime.sol";
 import { LibFaction } from "./LibFaction.sol";
 import { LibDynamicStates } from "./LibDynamicStates.sol";
 
+struct SoulCore {
+    uint32 balance;
+    uint32 maxSoulCapacity;
+    uint32 lastSoulUpdate;
+    uint8 dormantSince;
+}
+
 struct GotchipusCore {
     uint32 experience;
     uint16 level;
@@ -19,7 +26,7 @@ struct GotchipusCore {
     uint32 vitality;    // VIT 
     uint32 agility;     // AGI
     uint32 luck;        // LUK
-    uint32 soul;
+    SoulCore soul;
 }
 
 struct FactionCore {

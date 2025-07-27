@@ -46,4 +46,18 @@ library LibGotchiConstants {
     uint16 constant COMBAT_WEIGHT = 3500;       // 35.00%
     uint16 constant DEFENSE_WEIGHT = 3300;      // 33.00%
     uint16 constant TECHNOLOGY_WEIGHT = 3200;   // 32.00%
+
+    uint32 constant SOUL_DECAY_AMOUNT = 50000; // 5 soul per
+    uint32 constant OFFLINE_PENALTY_RATE = 20000;
+
+    address constant USDC = 0x0000000000000000000000000000000000000000;
+    address constant USDT = 0x0000000000000000000000000000000000000000;
+    address constant WETH = 0x0000000000000000000000000000000000000000;
+    address constant WBTC = 0x0000000000000000000000000000000000000000;
+    uint256 constant PHRS_TO_SOUL = 40000000; // 4000 soul
+    uint256 constant USDC_TO_SOUL = 10000; // 1 soul
+    uint256 constant USDT_TO_SOUL = 10000; // 1 soul
+    uint256 constant WETH_TO_SOUL = 40000000; // 4000 soul
+    uint256 constant WBTC_TO_SOUL = 1500000000; // 150000 soul
+
 }

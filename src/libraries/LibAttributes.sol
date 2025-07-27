@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { GotchipusInfo, GotchipusCore, AppStorage, LibAppStorage } from "./LibAppStorage.sol";
+import { GotchipusInfo, GotchipusCore, SoulCore, AppStorage, LibAppStorage } from "./LibAppStorage.sol";
 import { LibGotchiConstants } from "./LibGotchiConstants.sol";
 import { LibExperience } from "./LibExperience.sol";
+import { LibSoul } from "./LibSoul.sol";
 
 library LibAttributes {
 
-    function initializeAttribute(address sender, uint256 tokenId, uint8 rarity) internal {
+    function initializeAttribute(address sender, uint256 tokenId, uint8 rarity, address stakeToken, uint256 stakeAmount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         GotchipusInfo storage info = s.ownedGotchipusInfos[sender][tokenId];
         
@@ -40,7 +41,7 @@ library LibAttributes {
             vitality: vitality,
             agility: agility,
             luck: luck,
-            soul: 0
+            soul: LibSoul.initializeSoul(stakeToken, stakeAmount)
         });
     }
 

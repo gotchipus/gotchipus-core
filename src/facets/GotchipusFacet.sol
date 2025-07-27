@@ -210,7 +210,7 @@ contract GotchipusFacet is Modifier {
         _ownedPus.timezone = _args.utc;
         
         _ownedPus.core.experience = 50;
-        _ownedPus.core.soul = _getStableAether(_args.stakeAmount);
+        // _ownedPus.core.soul = _getStableAether(_args.stakeAmount);
 
         _ownedPus.singer = msg.sender;
         _ownedPus.status = 1;
