@@ -5,6 +5,7 @@ import { GotchipusInfo, GotchipusCore, SoulCore, AppStorage, LibAppStorage } fro
 import { LibGotchiConstants } from "./LibGotchiConstants.sol";
 import { LibExperience } from "./LibExperience.sol";
 import { LibSoul } from "./LibSoul.sol";
+import { LibDynamicStates } from "../libraries/LibDynamicStates.sol";
 
 library LibAttributes {
 
@@ -43,6 +44,8 @@ library LibAttributes {
             luck: luck,
             soul: LibSoul.initializeSoul(stakeToken, stakeAmount)
         });
+
+        info.states = LibDynamicStates.initializeStates(vitality);
     }
 
     function calculateAttribute(address sender, uint256 tokenId) internal view returns (uint32[6] memory) {

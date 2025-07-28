@@ -33,7 +33,7 @@ library LibFaction {
      * Defense: Defense: +15%, Vitality: +8%
      * Technology: mind: +15%, Luck: +8%
      */
-    function randomFaction(address sender, uint256 tokenId, uint256 randomSeed, uint8 rarity) internal returns (uint8) {
+    function initializeFaction(address sender, uint256 tokenId, uint256 randomSeed, uint8 rarity) internal returns (uint8) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         GotchipusInfo storage info = s.ownedGotchipusInfos[sender][tokenId];
         

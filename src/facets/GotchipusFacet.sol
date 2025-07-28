@@ -14,6 +14,10 @@ import { LibDna } from "../libraries/LibDna.sol";
 import { LibTime } from "../libraries/LibTime.sol";
 import { LibTransferHelper } from "../libraries/LibTransferHepler.sol";
 import { LibSvg } from "../libraries/LibSvg.sol";
+import { LibGotchiRarity } from "../libraries/LibGotchiRarity.sol";
+import { LibAttributes } from "../libraries/LibAttributes.sol";
+import { LibFaction } from "../libraries/LibFaction.sol";
+import { LibExperience } from "../libraries/LibExperience.sol";
 import { IGotchipusFacet } from "../interfaces/IGotchipusFacet.sol";
 import { IERC6551Registry } from "../interfaces/IERC6551Registry.sol";
 
@@ -180,7 +184,7 @@ contract GotchipusFacet is Modifier {
     }
 
     function summonGotchipus(SummonArgs calldata _args) external payable onlyGotchipusOwner(_args.gotchipusTokenId) {
-        require(s.accountOwnedByTokenId[_args.gotchipusTokenId] == address(0), "Pharos: already summon");
+        require(s.accountOwnedByTokenId[_args.gotchipusTokenId] == address(0), "GotchipusFacet: already summon");
         
         bytes32 salt = keccak256(abi.encode(block.chainid, _args.gotchipusTokenId, address(this)));
         address account = IERC6551Registry(s.erc6551Registry).createAccount(
@@ -204,17 +208,24 @@ contract GotchipusFacet is Modifier {
         _ownedPus.dna.generation = 0;
         _ownedPus.name = _args.gotchiName;
         _ownedPus.uri = LibStrings.strWithUint(string.concat(s.baseUri, "gotchipus/"), _args.gotchipusTokenId);
+        _ownedPus.story = _args.story;
         _ownedPus.owner = msg.sender;
         _ownedPus.collateral = _args.collateralToken;
         _ownedPus.birthTime = uint32(block.timestamp);
         _ownedPus.timezone = _args.utc;
         
-        _ownedPus.core.experience = 50;
-        // _ownedPus.core.soul = _getStableAether(_args.stakeAmount);
+        uint256 randomSeed = LibGotchiRarity.getRandomSeed(msg.sender, randomDna);
+        uint8 rarity = LibGotchiRarity.calculateRarity(msg.sender, randomSeed, _args.collateralToken, _args.stakeAmount);
+        _ownedPus.dna.rarity = rarity;
+
+        s.summonPityCount[msg.sender] = rarity == 0 ? s.summonPityCount[msg.sender] + 1 : 0;
+        
+        LibAttributes.initializeAttribute(msg.sender, _args.gotchipusTokenId, rarity, _args.collateralToken, _args.stakeAmount);
+        LibFaction.initializeFaction(msg.sender, _args.gotchipusTokenId, randomSeed, rarity);
 
         _ownedPus.singer = msg.sender;
         _ownedPus.status = 1;
-        _ownedPus.story = _args.story;
+        
         s.accountOwnedByTokenId[_args.gotchipusTokenId] = account;
         
         uint8[] memory indexs = randomTraitsIndex(_args.gotchipusTokenId);
@@ -250,21 +261,6 @@ contract GotchipusFacet is Modifier {
 
     function paused(bool _paused) external onlyOwner {
         s.isPaused = _paused;
-    }
-
-    function _getStableAether(uint256 stakeAmount) internal pure returns (uint16) {
-        uint256 formatAmount = stakeAmount / 10**18;
-        if (formatAmount >= 1000) {
-             return 100;
-        } else if (formatAmount >= 500) { 
-            return 75; 
-        } else if (formatAmount >= 250) {
-            return 50;
-        } else if (formatAmount >= 100) {
-            return 25;
-        } else {
-            return 10;
-        }
     }
 
     function burn(uint256 tokenId) external {

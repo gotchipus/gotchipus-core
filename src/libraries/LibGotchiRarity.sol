@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { AppStorage, LibAppStorage } from "./LibAppStorage.sol";
+import { AppStorage, LibAppStorage, SoulCore } from "./LibAppStorage.sol";
 import { LibGotchiConstants } from "./LibGotchiConstants.sol";
+import { LibSoul } from "./LibSoul.sol";
 
 library LibGotchiRarity {
     enum Rarity {
@@ -22,7 +23,7 @@ library LibGotchiRarity {
         )));
     }
 
-    function calculateRarity(address sender, uint256 randomSeed, uint256 stakingAmount) internal view returns (uint8) {
+    function calculateRarity(address sender, uint256 randomSeed, address stakeToken, uint256 stakeAmount) internal view returns (uint8) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 pityCount = s.summonPityCount[sender];
         if (pityCount >= 60) {
@@ -33,8 +34,9 @@ library LibGotchiRarity {
             return uint8(Rarity.RARE);
         }
 
-        // For every 500 tokens held, the legendary chance increases by 1%, up to a maximum of 5%.
-        uint256 stakingBonus = (stakingAmount / 500) > 5 ? 5 : (stakingAmount / 500);
+        // For every 500 souls, the legendary chance increases by 1%, up to a maximum of 5%.
+        SoulCore memory sc = LibSoul.initializeSoul(stakeToken, stakeAmount);
+        uint256 stakingBonus = (sc.balance / 500) > 5 ? 5 : (sc.balance / 500);
 
         uint16 adjustedLegendary = LibGotchiConstants.LEGENDARY_WEIGHT + uint16(stakingBonus) * 100;
         uint16 adjustedEpic = LibGotchiConstants.EPIC_WEIGHT;

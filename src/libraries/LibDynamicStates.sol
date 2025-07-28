@@ -32,7 +32,7 @@ library LibDynamicStates {
     event StateUpdated(uint256 indexed tokenId, uint8 health, uint8 energy, uint8 morale, uint8 focus);
     event MoodChanged(uint256 indexed tokenId, GotchiMood oldMood, GotchiMood newMood);
     
-    function initializeStates(uint16 vitality) internal view returns (DynamicStates memory) {
+    function initializeStates(uint32 vitality) internal view returns (DynamicStates memory) {
         uint8 baseHealth = 70 + uint8(vitality / 20);
         uint8 baseEnergy = 60 + uint8(vitality / 25);
         uint8 baseMorale = 80;
