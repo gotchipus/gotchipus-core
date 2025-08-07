@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { AppStorage, Modifier, GotchipusInfo, EquipWearableType } from "../libraries/LibAppStorage.sol";
+import { AppStorage, Modifier, GotchipusInfo, EquipWearableType, MAX_BODY_NUM, MAX_TRAITS_NUM } from "../libraries/LibAppStorage.sol";
 import { LibGotchiConstants } from "../libraries/LibGotchiConstants.sol";
 import { IERC721Receiver } from "../interfaces/IERC721Receiver.sol";
 import { IERC721Enumerable } from "../interfaces/IERC721Enumerable.sol";
@@ -89,7 +89,7 @@ contract GotchipusFacet is Modifier {
         return s.operatorApprovals[_owner][_operator];
     }
 
-    function getGotchiTraitsIndex(uint256 tokenId) external view returns (uint8[] memory indexs) {
+    function getGotchiTraitsIndex(uint256 tokenId) external view returns (uint8[MAX_TRAITS_NUM] memory indexs) {
         indexs = s.allGotchiTraitsIndex[tokenId];
     }
 
@@ -227,30 +227,11 @@ contract GotchipusFacet is Modifier {
         _ownedPus.status = 1;
         
         s.accountOwnedByTokenId[_args.gotchipusTokenId] = account;
-        
-        uint8[] memory indexs = randomTraitsIndex(_args.gotchipusTokenId);
-        
+                
         uint256 packed = LibDna.computePacked(_args.gotchipusTokenId);
         LibDna.setPacked(_args.gotchipusTokenId, packed);
 
-        s.allOwnerEquipWearableType[account].push(EquipWearableType({
-            wearableType: LibSvg.SVG_TYPE_BG,
-            wearableId: indexs[0],
-            equiped: true
-        }));
-        s.allOwnerEquipWearableType[account].push(EquipWearableType({
-            wearableType: LibSvg.SVG_TYPE_BODY,
-            wearableId: indexs[1] + 9,
-            equiped: true
-        }));
-        s.allOwnerEquipWearableType[account].push(EquipWearableType({
-            wearableType: LibSvg.SVG_TYPE_EYE,
-            wearableId: indexs[2] + 18,
-            equiped: true
-        }));
-        s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_BG] = true;
-        s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_BODY] = true;
-        s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_EYE] = true;
+        randomTraitsIndex(_args.gotchipusTokenId, account);
     }
 
     function addWhitelist(address[] calldata _whitelists, bool[] calldata _isWhitelists) external onlyOwner {
@@ -274,23 +255,38 @@ contract GotchipusFacet is Modifier {
         require(LibERC721._checkOnERC721Received(_from, _to, _tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
-    function randomTraitsIndex(uint256 tokenId) internal returns (uint8[] memory indexs_) {
+    function randomTraitsIndex(uint256 tokenId, address account) private {
         bytes32 seed = keccak256(abi.encodePacked(
             tokenId,
             block.timestamp,
             block.prevrandao
         ));
 
-        indexs_ = new uint8[](LibSvg.MAX_BODY_NUM);
+        for (uint256 i = 0; i < MAX_BODY_NUM; i++) {
+            bytes32 svgType;
+            if (i == 0) {
+                svgType = LibSvg.SVG_TYPE_BG;
+            } else if (i == 1) {
+                svgType = LibSvg.SVG_TYPE_BODY;
+            } else if (i == 2) {
+                svgType = LibSvg.SVG_TYPE_EYE;
+            }
 
-        for (uint256 i = 0; i < LibSvg.MAX_BODY_NUM; i++) {
+            uint256 wtIndex = LibSvg.getWearbaleTypeIndex(svgType);
+
+            uint8 count = s.countWearablesByType[svgType];
             seed = keccak256(abi.encodePacked(seed, i));
-            uint8 index = uint8(uint256(seed) % 10);
-            index = index == 9 ? index - 1 : index;
-            indexs_[i] = index;
-            s.gotchiTraitsIndex[tokenId][uint8(i)] = index;
-            s.allGotchiTraitsIndex[tokenId].push(index);
+            uint8 index = uint8(uint256(seed) % uint256(count));
+
+            s.gotchiTraitsIndex[tokenId][uint8(wtIndex)] = index;
+            s.allGotchiTraitsIndex[tokenId][wtIndex] = index;
+            s.allOwnerEquipWearableType[account][wtIndex] = EquipWearableType({
+                wearableType: svgType,
+                wearableId: s.idByWearableType[svgType][index],
+                equiped: true
+            });
+
+            s.isOwnerEquipWearable[account][svgType] = true;
         }
     }
-
 }

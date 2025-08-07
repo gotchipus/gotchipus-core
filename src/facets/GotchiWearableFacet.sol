@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { Modifier, WearableInfo, EquipWearableType } from "../libraries/LibAppStorage.sol";
+import { Modifier, WearableInfo, EquipWearableType, MAX_TRAITS_NUM } from "../libraries/LibAppStorage.sol";
 import { LibStrings } from "../libraries/LibStrings.sol";
 import { LibSvg } from "../libraries/LibSvg.sol";
 import { LibERC1155 } from "../WearableDiamond/libraries/LibERC1155.sol";
@@ -40,7 +40,7 @@ contract GotchiWearableFacet is Modifier {
         info_ = s.wearableInfo[tokenId];
     }
 
-    function getAllEquipWearableType(uint256 gotchiTokenId) external view returns (EquipWearableType[] memory ew_) {
+    function getAllEquipWearableType(uint256 gotchiTokenId) external view returns (EquipWearableType[MAX_TRAITS_NUM] memory ew_) {
         address account = s.accountOwnedByTokenId[gotchiTokenId];
         ew_ = s.allOwnerEquipWearableType[account];
     }
@@ -120,11 +120,18 @@ contract GotchiWearableFacet is Modifier {
         s.nextWearableTokenId++;
         s.wearableUri[wearableTokenId] = tokenUri;
         
-        s.wearableInfo[wearableTokenId].name = info.name;
-        s.wearableInfo[wearableTokenId].description = info.description;
-        s.wearableInfo[wearableTokenId].author = info.author;
-        s.wearableInfo[wearableTokenId].svgType = info.svgType;
-        s.wearableInfo[wearableTokenId].svgId = uint8(wearableTokenId);
+        uint8 count = s.countWearablesByType[info.wearableType]++;
+        s.idByWearableType[info.wearableType][count] = wearableTokenId;
+        s.typeIndexByWearableId[wearableTokenId][info.wearableType] = count;
+
+        s.wearableInfo[wearableTokenId] = WearableInfo({
+            name: info.name,
+            description: info.description,
+            author: info.author,
+            wearableType: info.wearableType,
+            wearableId: uint8(wearableTokenId)
+        });
+
         emit WearableURI(wearableTokenId, tokenUri);
     }
 
@@ -133,11 +140,18 @@ contract GotchiWearableFacet is Modifier {
             uint256 wearableTokenId = s.nextWearableTokenId++;
             s.wearableUri[wearableTokenId] = tokenUris[i];
 
-            s.wearableInfo[wearableTokenId].name = infos[i].name;
-            s.wearableInfo[wearableTokenId].description = infos[i].description;
-            s.wearableInfo[wearableTokenId].author = infos[i].author;
-            s.wearableInfo[wearableTokenId].svgType = infos[i].svgType;
-            s.wearableInfo[wearableTokenId].svgId = uint8(wearableTokenId);
+            uint8 count = s.countWearablesByType[infos[i].wearableType]++;
+            s.idByWearableType[infos[i].wearableType][count] = wearableTokenId;
+            s.typeIndexByWearableId[wearableTokenId][infos[i].wearableType] = count;
+
+            s.wearableInfo[wearableTokenId] = WearableInfo({
+                name: infos[i].name,
+                description: infos[i].description,
+                author: infos[i].author,
+                wearableType: infos[i].wearableType,
+                wearableId: uint8(wearableTokenId)
+            });
+
             emit WearableURI(wearableTokenId, tokenUris[i]);
         }
     }
@@ -147,80 +161,35 @@ contract GotchiWearableFacet is Modifier {
         emit AddWearable(wearable);
     }
 
-    function equipWearable(uint256 gotchiTokenId, uint256 wearableTokenId) external onlyGotchipusOwner(gotchiTokenId) {
-        require(s.ownerWearableBalances[msg.sender][wearableTokenId] > 0, "Wearable: Insufficient balance");
-        require(s.accountOwnedByTokenId[gotchiTokenId] == msg.sender, "Wearable: Only TBA call");
-        
-        s.isEquipWearableByIndex[gotchiTokenId][wearableTokenId] = true;
-        s.isAnyEquipWearable[gotchiTokenId] = true;
-    }
-
-    function simpleEquipWearable(uint256 gotchiTokenId, uint256 wearableTokenId, bytes32 wearableType) external {
+    function equipWearable(uint256 gotchiTokenId, uint256 wearableTokenId, bytes32 wearableType) external onlyGotchipusOwner(gotchiTokenId) {
         require(s.ownerWearableBalances[msg.sender][wearableTokenId] > 0, "Wearable: Insufficient balance");
         s.isEquipWearableByIndex[gotchiTokenId][wearableTokenId] = true;
         s.isAnyEquipWearable[gotchiTokenId] = true;
 
         address account = s.accountOwnedByTokenId[gotchiTokenId];
+        require(account == msg.sender, "Wearable: Only TBA call");
+
         s.ownerWearableBalances[msg.sender][wearableTokenId] -= 1;
         s.ownerWearableBalances[account][wearableTokenId] += 1;
-        
+
+        uint256 typeIndex = LibSvg.getWearbaleTypeIndex(wearableType);
         bool isEquip = s.isOwnerEquipWearable[account][wearableType];
+
         if (!isEquip) {
-            s.allOwnerEquipWearableType[account].push(EquipWearableType({
+            s.allOwnerEquipWearableType[account][typeIndex] = EquipWearableType({
                 wearableType: wearableType,
                 wearableId: wearableTokenId,
                 equiped: true
-            }));
+            });
             s.isOwnerEquipWearable[account][wearableType] = true;
         } else {
-            uint256 typeIndex = getWearbaleTypeIndex(wearableType);
             EquipWearableType storage wearableToModify = s.allOwnerEquipWearableType[account][typeIndex];
             wearableToModify.wearableId = wearableTokenId;
         }
-
-        uint8 svgTypeIndex;
-        uint256 svgTypeOffset;
-        if (wearableType == LibSvg.SVG_TYPE_HAND) {
-            svgTypeIndex = 3;
-            svgTypeOffset = 27;
-        } else if (wearableType == LibSvg.SVG_TYPE_HEAD) {
-            svgTypeIndex = 4;
-            svgTypeOffset = 36;
-        } else if (wearableType == LibSvg.SVG_TYPE_CLOTHES) {
-            svgTypeIndex = 5;
-            svgTypeOffset = 45;
-        }
         
-        uint8 svgIndex = uint8(wearableTokenId - svgTypeOffset);
-        s.gotchiTraitsIndex[gotchiTokenId][svgTypeIndex] = svgIndex;
-        s.allGotchiTraitsIndex[gotchiTokenId].push(svgIndex);
-
-        if (!s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_BG]) {
-            s.allOwnerEquipWearableType[account].push(EquipWearableType({
-                wearableType: LibSvg.SVG_TYPE_BG,
-                wearableId: s.gotchiTraitsIndex[gotchiTokenId][0],
-                equiped: true
-            }));
-            s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_BG] = true;
-        }
-
-        if (!s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_BODY]) {
-            s.allOwnerEquipWearableType[account].push(EquipWearableType({
-                wearableType: LibSvg.SVG_TYPE_BODY,
-                wearableId: s.gotchiTraitsIndex[gotchiTokenId][1] + 9,
-                equiped: true
-            }));
-            s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_BODY] = true;
-        }
-
-        if (!s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_EYE]) {
-            s.allOwnerEquipWearableType[account].push(EquipWearableType({
-                wearableType: LibSvg.SVG_TYPE_EYE,
-                wearableId: s.gotchiTraitsIndex[gotchiTokenId][2] + 18,
-                equiped: true
-            }));
-            s.isOwnerEquipWearable[account][LibSvg.SVG_TYPE_EYE] = true;
-        }      
+        uint8 svgIndex = s.typeIndexByWearableId[wearableTokenId][wearableType];
+        s.gotchiTraitsIndex[gotchiTokenId][uint8(typeIndex)] = svgIndex;
+        s.allGotchiTraitsIndex[gotchiTokenId][typeIndex] = svgIndex;
 
         emit IWearableFacet.TransferSingle(msg.sender, msg.sender, account, wearableTokenId, 1);
     }
@@ -229,22 +198,6 @@ contract GotchiWearableFacet is Modifier {
         for (uint256 i = 27; i < 54; i++) {
             s.ownerWearableBalances[msg.sender][i] += 1;
             emit IWearableFacet.TransferSingle(msg.sender, address(0), msg.sender, i, 1);
-        }
-    }
-
-    function getWearbaleTypeIndex(bytes32 wearableType) internal pure returns (uint256) {
-        if (wearableType == LibSvg.SVG_TYPE_BODY) {
-            return 1;
-        } else if (wearableType == LibSvg.SVG_TYPE_EYE) {
-            return 2;
-        } else if (wearableType == LibSvg.SVG_TYPE_HAND) {
-            return 3;
-        } else if (wearableType == LibSvg.SVG_TYPE_HEAD) {
-            return 4;
-        } else if (wearableType == LibSvg.SVG_TYPE_CLOTHES) {
-            return 5;
-        } else {
-            return 0;
         }
     }
 }

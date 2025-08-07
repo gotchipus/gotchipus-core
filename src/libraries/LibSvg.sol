@@ -6,23 +6,45 @@ import { LibStrings } from "./LibStrings.sol";
 
 library LibSvg {
     uint256 internal constant MAX_SIZE = 24_576;
-    uint256 internal constant MAX_NUM_PER_TRAITS = 255;
-    uint256 internal constant MAX_BODY_NUM = 3;
-    uint256 internal constant MAX_TRAITS_NUM = 6; // add more on mainnet 
     bytes32 internal constant SVG_TYPE_PHAROS = "gotchipus-pharos";
     bytes32 internal constant SVG_TYPE_BG = "gotchipus-bg";
     bytes32 internal constant SVG_TYPE_BODY = "gotchipus-body";
-    bytes32 internal constant SVG_TYPE_EYE = "gotchipus-eye";
-    bytes32 internal constant SVG_TYPE_HAND = "gotchipus-hand";
-    bytes32 internal constant SVG_TYPE_HEAD = "gotchipus-head";
+    bytes32 internal constant SVG_TYPE_LEFT_HAND = "gotchipus-left-hand";
+    bytes32 internal constant SVG_TYPE_RIGHT_HAND = "gotchipus-right-hand";
     bytes32 internal constant SVG_TYPE_CLOTHES = "gotchipus-clothes";
-
+    bytes32 internal constant SVG_TYPE_FACE = "gotchipus-face";
+    bytes32 internal constant SVG_TYPE_MOUTH = "gotchipus-mouth";
+    bytes32 internal constant SVG_TYPE_EYE = "gotchipus-eye";
+    bytes32 internal constant SVG_TYPE_HEAD = "gotchipus-head";
+    
     event StoreSvg(SvgItem[] items);
     event UpdateSvg(SvgItem[] items);
 
     struct SvgItem {
         bytes32 svgType;
         uint256 size;
+    }
+
+    function getWearbaleTypeIndex(bytes32 wearableType) internal pure returns (uint256) {
+        if (wearableType == SVG_TYPE_BODY) {
+            return 1;
+        } else if (wearableType == SVG_TYPE_LEFT_HAND) {
+            return 2;
+        } else if (wearableType == SVG_TYPE_RIGHT_HAND) {
+            return 3;
+        } else if (wearableType == SVG_TYPE_CLOTHES) {
+            return 4;
+        } else if (wearableType == SVG_TYPE_FACE) {
+            return 5;
+        } else if (wearableType == SVG_TYPE_MOUTH) {
+            return 6;
+        } else if (wearableType == SVG_TYPE_EYE) {
+            return 7;
+        } else if (wearableType == SVG_TYPE_HEAD) {
+            return 8;
+        } else {
+            return 0;
+        }
     }
 
     function readSvg(address svgContract) internal view returns (bytes memory svg) {
@@ -127,7 +149,7 @@ library LibSvg {
         AppStorage storage s = LibAppStorage.diamondStorage();
         address svgContract = storeSvgInContract(svg);
         uint256 offset;
-
+        
         for (uint256 i = 0; i < svgItems.length; i++) {
             SvgItem calldata item = svgItems[i];
             s.svgLayers[item.svgType].push(SvgLayer(svgContract, uint16(offset), uint16(item.size)));

@@ -8,6 +8,10 @@ import { LibTime } from "./LibTime.sol";
 import { LibFaction } from "./LibFaction.sol";
 import { LibDynamicStates } from "./LibDynamicStates.sol";
 
+uint256 constant MAX_NUM_PER_TRAITS = 255;
+uint256 constant MAX_BODY_NUM = 3;
+uint256 constant MAX_TRAITS_NUM = 9;
+
 struct SoulCore {
     uint32 balance;
     uint32 maxSoulCapacity;
@@ -111,8 +115,8 @@ struct WearableInfo {
     string name;
     string description;
     string author;
-    bytes32 svgType;
-    uint8 svgId;
+    bytes32 wearableType;
+    uint8 wearableId;
 }
 
 struct DNAData {
@@ -174,17 +178,10 @@ struct AppStorage {
     TraitsOffset[] traitsOffset; 
     mapping(uint256 => uint256) tokenTraitsPacked;
 
-    // Mock farm 
-    mapping(address => uint256) ownedFish;
-    mapping(address => uint256) breedFish;
-
     // Hooks
     // address can owned multiple hooks
     mapping(uint256 => mapping(IHook.GotchiEvent => address[])) tokenHooksByEvent;
     mapping(uint256 => mapping(address => bool)) isValidHook;
-
-    // traits svg
-    mapping(bytes32 => SvgLayer[]) svgLayers;
 
     // ext contract
     address erc6551Registry;
@@ -195,27 +192,26 @@ struct AppStorage {
     // off-chain weather
     mapping(uint8 => LibTime.Weather) weatherByTimezone;
 
-    // gotchipus traits index
+    // Wearable && traits
+    mapping(bytes32 => SvgLayer[]) svgLayers;
     mapping(uint256 => mapping(uint8 => uint8)) gotchiTraitsIndex;
     mapping(uint8 => bytes32) svgTypeBytes32;
+    mapping(uint256 => uint8[MAX_TRAITS_NUM]) allGotchiTraitsIndex;
 
-    // Wearable nft
     address wearableDiamond;
+    uint256 nextWearableTokenId;
+    string wearableBaseUri;
     mapping(address => mapping(uint256 => uint256)) ownerWearableBalances;
     mapping(address => uint256[]) ownerWearables;
     mapping(uint256 => WearableInfo) wearableInfo;
     mapping(uint256 => string) wearableUri;
     mapping(uint256 => mapping(uint256 => bool)) isEquipWearableByIndex;
     mapping(uint256 => bool) isAnyEquipWearable;
-    uint256 nextWearableTokenId;
-    string wearableBaseUri;
-
-    // add gotchipus traits index
-    mapping(uint256 => uint8[]) allGotchiTraitsIndex;
-
-    // add equip wearable info
-    mapping(address => EquipWearableType[]) allOwnerEquipWearableType;
+    mapping(address => EquipWearableType[MAX_TRAITS_NUM]) allOwnerEquipWearableType;
     mapping(address => mapping(bytes32 => bool)) isOwnerEquipWearable;
+    mapping(bytes32 => uint8) countWearablesByType;
+    mapping(bytes32 => mapping(uint8 => uint256)) idByWearableType;
+    mapping(uint256 => mapping(bytes32 => uint8)) typeIndexByWearableId;
 
     /**
      * We’ve added a pity system:

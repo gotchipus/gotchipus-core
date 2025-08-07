@@ -24,7 +24,6 @@ contract InitDiamond {
         bytes32[6] svgTypes;
     }
 
-
     function init(Args calldata _args) external {
         s.name = _args.name;
         s.symbol = _args.symbol;
