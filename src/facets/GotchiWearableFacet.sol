@@ -162,13 +162,12 @@ contract GotchiWearableFacet is Modifier {
     }
 
     function equipWearable(uint256 gotchiTokenId, uint256 wearableTokenId, bytes32 wearableType) external onlyGotchipusOwner(gotchiTokenId) {
-        require(s.ownerWearableBalances[msg.sender][wearableTokenId] > 0, "Wearable: Insufficient balance");
+        require(s.ownerWearableBalances[msg.sender][wearableTokenId] > 0, "WearableFacet: Insufficient balance");
+        
         s.isEquipWearableByIndex[gotchiTokenId][wearableTokenId] = true;
         s.isAnyEquipWearable[gotchiTokenId] = true;
 
         address account = s.accountOwnedByTokenId[gotchiTokenId];
-        require(account == msg.sender, "Wearable: Only TBA call");
-
         s.ownerWearableBalances[msg.sender][wearableTokenId] -= 1;
         s.ownerWearableBalances[account][wearableTokenId] += 1;
 
@@ -184,7 +183,13 @@ contract GotchiWearableFacet is Modifier {
             s.isOwnerEquipWearable[account][wearableType] = true;
         } else {
             EquipWearableType storage wearableToModify = s.allOwnerEquipWearableType[account][typeIndex];
+            uint256 oldWearableId = wearableToModify.wearableId;
             wearableToModify.wearableId = wearableTokenId;
+
+            s.ownerWearableBalances[msg.sender][oldWearableId] += 1;
+            s.ownerWearableBalances[account][oldWearableId] -= 1;
+            s.isEquipWearableByIndex[gotchiTokenId][oldWearableId] = false;
+            emit IWearableFacet.TransferSingle(msg.sender, account, msg.sender, oldWearableId, 1);
         }
         
         uint8 svgIndex = s.typeIndexByWearableId[wearableTokenId][wearableType];
@@ -192,6 +197,53 @@ contract GotchiWearableFacet is Modifier {
         s.allGotchiTraitsIndex[gotchiTokenId][typeIndex] = svgIndex;
 
         emit IWearableFacet.TransferSingle(msg.sender, msg.sender, account, wearableTokenId, 1);
+    }
+
+    function batchEquipWearable(uint256 gotchiTokenId, uint256[] calldata wearableTokenIds, bytes32[] calldata wearableTypes) external onlyGotchipusOwner(gotchiTokenId) {
+        require(wearableTokenIds.length == wearableTypes.length, "WearableFacet: Invalid length");
+
+        s.isAnyEquipWearable[gotchiTokenId] = true;
+        address account = s.accountOwnedByTokenId[gotchiTokenId];
+        uint256[] memory values = new uint256[](wearableTokenIds.length);
+
+        for (uint256 i = 0; i < wearableTokenIds.length; i++) {
+            uint256 wid = wearableTokenIds[i];
+            bytes32 wtype = wearableTypes[i];
+            require(s.ownerWearableBalances[msg.sender][wid] != 0, "WearableFacet: Insufficient balance");
+
+            s.isEquipWearableByIndex[gotchiTokenId][wid] = true;
+            s.ownerWearableBalances[msg.sender][wid] -= 1;
+            s.ownerWearableBalances[account][wid] += 1;
+
+            uint256 typeIndex = LibSvg.getWearbaleTypeIndex(wtype);
+            bool isEquip = s.isOwnerEquipWearable[account][wtype];
+
+            if (!isEquip) {
+                s.allOwnerEquipWearableType[account][typeIndex] = EquipWearableType({
+                    wearableType: wtype,
+                    wearableId: wid,
+                    equiped: true
+                });
+                s.isOwnerEquipWearable[account][wtype] = true;
+            } else {
+                EquipWearableType storage wearableToModify = s.allOwnerEquipWearableType[account][typeIndex];
+                uint256 oldWearableId = wearableToModify.wearableId;
+                wearableToModify.wearableId = wid;
+
+                s.ownerWearableBalances[msg.sender][oldWearableId] += 1;
+                s.ownerWearableBalances[account][oldWearableId] -= 1;
+                s.isEquipWearableByIndex[gotchiTokenId][oldWearableId] = false;
+                emit IWearableFacet.TransferSingle(msg.sender, account, msg.sender, oldWearableId, 1);
+            }
+
+            uint8 svgIndex = s.typeIndexByWearableId[wid][wtype];
+            s.gotchiTraitsIndex[gotchiTokenId][uint8(typeIndex)] = svgIndex;
+            s.allGotchiTraitsIndex[gotchiTokenId][typeIndex] = svgIndex;
+
+            values[i] = 1;
+        }
+        
+        emit IWearableFacet.TransferBatch(msg.sender, msg.sender, account, wearableTokenIds, values);
     }
 
     function claimWearable() external ownedGotchi {
