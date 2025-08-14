@@ -166,6 +166,7 @@ contract GotchiWearableFacet is Modifier {
         
         s.isEquipWearableByIndex[gotchiTokenId][wearableTokenId] = true;
         s.isAnyEquipWearable[gotchiTokenId] = true;
+        s.equipWearableCount[gotchiTokenId] += 1;
 
         address account = s.accountOwnedByTokenId[gotchiTokenId];
         s.ownerWearableBalances[msg.sender][wearableTokenId] -= 1;
@@ -239,11 +240,66 @@ contract GotchiWearableFacet is Modifier {
             uint8 svgIndex = s.typeIndexByWearableId[wid][wtype];
             s.gotchiTraitsIndex[gotchiTokenId][uint8(typeIndex)] = svgIndex;
             s.allGotchiTraitsIndex[gotchiTokenId][typeIndex] = svgIndex;
-
+            s.equipWearableCount[gotchiTokenId] += 1;
             values[i] = 1;
         }
         
         emit IWearableFacet.TransferBatch(msg.sender, msg.sender, account, wearableTokenIds, values);
+    }
+
+    function unequipWearable(uint256 gotchiTokenId, uint256 wearableTokenId, bytes32 wearableType) external onlyGotchipusOwner(gotchiTokenId) {
+        require(s.isEquipWearableByIndex[gotchiTokenId][wearableTokenId], "WearableFacet: already unequip");
+
+        address account = s.accountOwnedByTokenId[gotchiTokenId];
+        s.isEquipWearableByIndex[gotchiTokenId][wearableTokenId] = false;
+
+        uint256 equipCount = --s.equipWearableCount[gotchiTokenId];
+        if (equipCount == 0) {
+            s.isAnyEquipWearable[gotchiTokenId] = false;
+        }
+
+        s.ownerWearableBalances[msg.sender][wearableTokenId] += 1;
+        s.ownerWearableBalances[account][wearableTokenId] -= 1;
+
+        uint256 typeIndex = LibSvg.getWearbaleTypeIndex(wearableType);
+        s.isOwnerEquipWearable[account][wearableType] = false;
+        delete s.allOwnerEquipWearableType[account][typeIndex];
+        delete s.gotchiTraitsIndex[gotchiTokenId][uint8(typeIndex)];
+        delete s.allGotchiTraitsIndex[gotchiTokenId][typeIndex];
+
+        emit IWearableFacet.TransferSingle(msg.sender, account, msg.sender, wearableTokenId, 1);
+    }
+
+    function batchUnequipWearable(uint256 gotchiTokenId, uint256[] calldata wearableTokenIds, bytes32[] calldata wearableTypes) external onlyGotchipusOwner(gotchiTokenId) {
+        require(wearableTokenIds.length == wearableTypes.length, "WearableFacet: Invalid length");
+
+        address account = s.accountOwnedByTokenId[gotchiTokenId];
+        uint256[] memory values = new uint256[](wearableTokenIds.length);
+
+        for (uint256 i = 0; i < wearableTokenIds.length; i++) {
+            uint256 wid = wearableTokenIds[i];
+            bytes32 wtype = wearableTypes[i];
+            require(s.isEquipWearableByIndex[gotchiTokenId][wid], "WearableFacet: already unequip");
+            s.isEquipWearableByIndex[gotchiTokenId][wid] = false;
+
+            s.ownerWearableBalances[msg.sender][wid] += 1;
+            s.ownerWearableBalances[account][wid] -= 1;
+
+            uint256 typeIndex = LibSvg.getWearbaleTypeIndex(wtype);
+            s.isOwnerEquipWearable[account][wtype] = false;
+            delete s.allOwnerEquipWearableType[account][typeIndex];
+            delete s.gotchiTraitsIndex[gotchiTokenId][uint8(typeIndex)];
+            delete s.allGotchiTraitsIndex[gotchiTokenId][typeIndex];
+            values[i] = 1;
+        }
+
+        uint256 equipCount = s.equipWearableCount[gotchiTokenId] - wearableTokenIds.length;
+        if (equipCount == 0) {
+            s.isAnyEquipWearable[gotchiTokenId] = false;
+        }
+        s.equipWearableCount[gotchiTokenId] = equipCount;
+
+        emit IWearableFacet.TransferBatch(msg.sender, account, msg.sender, wearableTokenIds, values);
     }
 
     function claimWearable() external ownedGotchi {

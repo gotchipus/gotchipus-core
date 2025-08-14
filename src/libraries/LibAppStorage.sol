@@ -207,6 +207,7 @@ struct AppStorage {
     mapping(uint256 => string) wearableUri;
     mapping(uint256 => mapping(uint256 => bool)) isEquipWearableByIndex;
     mapping(uint256 => bool) isAnyEquipWearable;
+    mapping(uint256 => uint256) equipWearableCount;
     mapping(address => EquipWearableType[MAX_TRAITS_NUM]) allOwnerEquipWearableType;
     mapping(address => mapping(bytes32 => bool)) isOwnerEquipWearable;
     mapping(bytes32 => uint8) countWearablesByType;
