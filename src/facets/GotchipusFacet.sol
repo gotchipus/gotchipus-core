@@ -18,6 +18,7 @@ import { LibGotchiRarity } from "../libraries/LibGotchiRarity.sol";
 import { LibAttributes } from "../libraries/LibAttributes.sol";
 import { LibFaction } from "../libraries/LibFaction.sol";
 import { LibExperience } from "../libraries/LibExperience.sol";
+import { LibTransferHelper } from "../libraries/LibTransferHepler.sol";
 import { IGotchipusFacet } from "../interfaces/IGotchipusFacet.sol";
 import { IERC6551Registry } from "../interfaces/IERC6551Registry.sol";
 
@@ -288,5 +289,9 @@ contract GotchipusFacet is Modifier {
 
             s.isOwnerEquipWearable[account][svgType] = true;
         }
+    }
+
+    function withdrawETH() external onlyOwner {
+        LibTransferHelper.safeTransferETH(msg.sender, address(this).balance);
     }
 }

@@ -11,6 +11,8 @@ contract GotchiWearableFacet is Modifier {
     event AddWearable(address indexed wearable);
     event WearableURI(uint256 indexed tokenId, string indexed wearableUri);
 
+    uint256 public PRICE = 0.001 ether;
+
     function wearableBalanceOf(address owner, uint256 tokenId) public view returns (uint256 bn) {
         bn = s.ownerWearableBalances[owner][tokenId];
     }
@@ -302,10 +304,51 @@ contract GotchiWearableFacet is Modifier {
         emit IWearableFacet.TransferBatch(msg.sender, account, msg.sender, wearableTokenIds, values);
     }
 
-    function claimWearable() external ownedGotchi {
-        for (uint256 i = 27; i < 54; i++) {
-            s.ownerWearableBalances[msg.sender][i] += 1;
-            emit IWearableFacet.TransferSingle(msg.sender, address(0), msg.sender, i, 1);
+    function mintWearable(address sender, uint256 wearableTokenId, uint256 amount) external payable onlyWearable {
+        require(amount * PRICE == msg.value, "WearableFacet: Invalid value");
+
+        s.ownerWearableBalances[sender][wearableTokenId] += amount;
+        emit IWearableFacet.TransferSingle(sender, address(0), sender, wearableTokenId, amount);
+    }
+
+    function claimWearable(address sender) external onlyWearable {
+        require(s.isWearableClaimed[sender], "WearableFacet: alreday claimed");
+
+        bytes32 seed = keccak256(abi.encodePacked(
+            s.ownedGotchipusInfos[sender][s.ownerTokens[sender][0]].dna.geneSeed,
+            block.timestamp,
+            block.prevrandao
+        ));
+
+        bytes32[] memory tp = new bytes32[](3);
+        for (uint256 i = 0; i < 3; i++) {
+            uint256 tIndex = uint256(seed) % 6;
+            if (tIndex == 0) {
+                tp[i] = LibSvg.SVG_TYPE_LEFT_HAND;
+            } else if (tIndex == 1) {
+                tp[i] = LibSvg.SVG_TYPE_RIGHT_HAND;
+            } else if (tIndex == 2) {
+                tp[i] = LibSvg.SVG_TYPE_CLOTHES;
+            } else if (tIndex == 3) {
+                tp[i] = LibSvg.SVG_TYPE_FACE;
+            } else if (tIndex == 4) {
+                tp[i] = LibSvg.SVG_TYPE_MOUTH;
+            } else if (tIndex == 5) {
+                tp[i] = LibSvg.SVG_TYPE_HEAD;
+            }
+        }
+
+        for (uint256 i = 0; i < 3; i++) {
+            bytes32 svgType = tp[i];
+
+            uint8 count = s.countWearablesByType[svgType];
+            seed = keccak256(abi.encodePacked(seed, i));
+            uint8 index = uint8(uint256(seed) % uint256(count));
+
+            uint256 wearableId = s.idByWearableType[svgType][index];
+            s.ownerWearableBalances[sender][wearableId] += 1;
+
+            emit IWearableFacet.TransferSingle(sender, address(0), sender, wearableId, 1);
         }
     }
 }

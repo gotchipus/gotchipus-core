@@ -213,7 +213,7 @@ struct AppStorage {
     mapping(bytes32 => uint8) countWearablesByType;
     mapping(bytes32 => mapping(uint8 => uint256)) idByWearableType;
     mapping(uint256 => mapping(bytes32 => uint8)) typeIndexByWearableId;
-
+    mapping(address => bool) isWearableClaimed;
     /**
      * We’ve added a pity system:
      * RARE guaranteed after 15 pulls

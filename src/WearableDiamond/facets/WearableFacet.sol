@@ -63,4 +63,12 @@ contract WearableFacet {
         emit TransferBatch(msg.sender, from, to, tokenIds, values);
     }
 
+    function mintWearable(uint256 wearableTokenId, uint256 amount) external payable {
+        gotchiWearableFacet().mintWearable{value: msg.value}(msg.sender, wearableTokenId, amount);
+    }
+
+    function claimWearable() external {
+        require(gotchipusFacet().balanceOf(msg.sender) != 0, "WearableDiamond: Insufficient Gotchi");
+        gotchiWearableFacet().claimWearable(msg.sender);
+    }
 }
