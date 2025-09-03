@@ -45,7 +45,7 @@ library FacetSelectors {
             selectors[25] = GotchipusFacet.getGotchiOrPharosInfo.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("AttributesFacet"))) {
             selectors = new bytes4[](5);
-            selectors[0] = AttributesFacet.bonding.selector;
+            selectors[0] = AttributesFacet.getAttributes.selector;
             selectors[1] = AttributesFacet.getTokenName.selector;
             selectors[2] = AttributesFacet.pet.selector;
             selectors[3] = AttributesFacet.setName.selector;
@@ -66,7 +66,7 @@ library FacetSelectors {
             selectors[0] = ERC6551Facet.account.selector;
             selectors[1] = ERC6551Facet.executeAccount.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("GotchiWearableFacet"))) {
-            selectors = new bytes4[](17);
+            selectors = new bytes4[](16);
             selectors[0] = GotchiWearableFacet.wearableBalanceOf.selector;
             selectors[1] = GotchiWearableFacet.wearableBalanceOfBatch.selector;
             selectors[2] = GotchiWearableFacet.wearableUri.selector;
@@ -82,9 +82,8 @@ library FacetSelectors {
             // new add
             selectors[12] = GotchiWearableFacet.claimWearable.selector; 
             selectors[13] = GotchiWearableFacet.getWearableInfo.selector;
-            selectors[14] = GotchiWearableFacet.simpleEquipWearable.selector;
-            selectors[15] = GotchiWearableFacet.getAllEquipWearableType.selector;
-            selectors[16] = GotchiWearableFacet.getWearableDiamond.selector;
+            selectors[14] = GotchiWearableFacet.getAllEquipWearableType.selector;
+            selectors[15] = GotchiWearableFacet.getWearableDiamond.selector;
         } else if (keccak256(abi.encodePacked(facetName)) == keccak256(abi.encodePacked("SvgFacet"))) {
             selectors = new bytes4[](6);
             selectors[0] = SvgFacet.getSvg.selector;
