@@ -10,7 +10,7 @@ import { LibDynamicStates } from "./LibDynamicStates.sol";
 
 uint256 constant MAX_NUM_PER_TRAITS = 255;
 uint256 constant MAX_BODY_NUM = 3;
-uint256 constant MAX_TRAITS_NUM = 9;
+uint256 constant MAX_TRAITS_NUM = 8;
 
 struct SoulCore {
     uint32 balance;

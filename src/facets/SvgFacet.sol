@@ -10,6 +10,9 @@ contract SvgFacet is Modifier {
         address owner = s.tokenOwners[tokenId];
         uint8 status = s.ownedGotchipusInfos[owner][tokenId].status;
         bytes memory svg;
+        string memory openDisplay = "none";
+        string memory closeDisplay = "block";
+
         if (status == 0) {
             bytes32 pharos = bytes32(abi.encodePacked("pharos"));
             address svgLayerContract = s.svgLayers[pharos][0].svgLayerContract;
@@ -22,17 +25,38 @@ contract SvgFacet is Modifier {
             }
 
             if (s.isAnyEquipWearable[tokenId]) {
-                for (uint256 i = MAX_BODY_NUM; i < MAX_TRAITS_NUM; i++) {
-                    if (s.isEquipWearableByIndex[tokenId][i]) {
+                address account = s.accountOwnedByTokenId[tokenId];
+
+                for (uint256 i = MAX_BODY_NUM; i < MAX_TRAITS_NUM; i++) {       
+                    bytes32 svgType = s.svgTypeBytes32[uint8(i)];
+
+                    if (s.isOwnerEquipWearable[account][svgType]) {
                         uint8 index = s.gotchiTraitsIndex[tokenId][uint8(i)];
-                        bytes32 svgType = s.svgTypeBytes32[uint8(i)];
+
+                        if (svgType == LibSvg.SVG_TYPE_HAND) {
+                            openDisplay = "block";
+                            closeDisplay = "none";
+                        }
+
                         svg = bytes.concat(svg, LibSvg.sliceSvg(svgType, index));
                     }
                 }
             }
         }
 
-        gs = string(abi.encodePacked('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">', svg, "</svg>"));
+        string memory style = string(abi.encodePacked(
+            '<style>',
+            '.gotchiHandOpen { display: ', openDisplay, '; }',
+            '.gotchiHandClose { display: ', closeDisplay, '; }',
+            '</style>'
+        ));
+
+        gs = string(abi.encodePacked(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">',
+            style,
+            svg, 
+            "</svg>"
+        ));
     }
 
     function getSvg(bytes32 svgType, uint256 id) external view returns (string memory svg) {

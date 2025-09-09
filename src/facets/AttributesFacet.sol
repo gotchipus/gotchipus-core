@@ -9,11 +9,11 @@ contract AttributesFacet is Modifier {
     event SetName(string indexed newName);
     event Pet(uint256 indexed gotchiTokenId);
 
-    function pet(uint256 gotchipusTokenId) external {
-        require(uint256(s.lastPetTime[gotchipusTokenId]) + 1 days <= block.timestamp, "gotchipus already pet");
-        s.lastPetTime[gotchipusTokenId] = uint32(block.timestamp);
+    function pet(uint256 gotchiTokenId) external {
+        require(uint256(s.lastPetTime[gotchiTokenId]) + 1 days <= block.timestamp, "gotchipus already pet");
+        s.lastPetTime[gotchiTokenId] = uint32(block.timestamp);
 
-        GotchipusInfo storage pus = s.ownedGotchipusInfos[msg.sender][gotchipusTokenId];
+        GotchipusInfo storage pus = s.ownedGotchipusInfos[msg.sender][gotchiTokenId];
         pus.core.experience = (pus.core.experience + 20 >= type(uint32).max) ? type(uint32).max : pus.core.experience + 20;
         pus.states.health = (pus.states.health + 20 >= type(uint8).max) ? type(uint8).max : pus.states.health + 20;
         pus.states.energy = (pus.states.energy + 20 >= type(uint8).max) ? type(uint8).max : pus.states.energy + 20;
@@ -26,11 +26,11 @@ contract AttributesFacet is Modifier {
         pus.leveling.interactionExp += 20;
         pus.leveling.lastExpGain = uint32(block.timestamp);
 
-        emit Pet(gotchipusTokenId);
-    }     
+        emit Pet(gotchiTokenId);
+    }
 
-    function setName(string calldata newName, uint256 gotchipusTokenId) external onlyGotchipusOwner(gotchipusTokenId) {
-        s.ownedGotchipusInfos[msg.sender][gotchipusTokenId].name = newName;
+    function setName(string calldata newName, uint256 gotchiTokenId) external onlyGotchipusOwner(gotchiTokenId) {
+        s.ownedGotchipusInfos[msg.sender][gotchiTokenId].name = newName;
         emit SetName(newName);
     }
 
@@ -38,11 +38,15 @@ contract AttributesFacet is Modifier {
         return s.lastPetTime[tokenId];
     }
 
-    function getTokenName(uint256 gotchipusTokenId) external view returns (string memory) {
-        return s.ownedGotchipusInfos[s.tokenOwners[gotchipusTokenId]][gotchipusTokenId].name;
+    function getTokenName(uint256 gotchiTokenId) external view returns (string memory) {
+        return s.ownedGotchipusInfos[s.tokenOwners[gotchiTokenId]][gotchiTokenId].name;
     }
 
     function getAttributes(uint256 gotchiTokenId) external view returns (uint32[6] memory) {
         return LibAttributes.calculateAttribute(s.tokenOwners[gotchiTokenId], gotchiTokenId);
+    }
+
+    function getSoul(uint256 gotchiTokenId) external view returns (uint32 soul_) {
+        soul_ = s.ownedGotchipusInfos[s.tokenOwners[gotchiTokenId]][gotchiTokenId].core.soul.balance;
     }
 }

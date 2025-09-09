@@ -322,18 +322,16 @@ contract GotchiWearableFacet is Modifier {
 
         bytes32[] memory tp = new bytes32[](3);
         for (uint256 i = 0; i < 3; i++) {
-            uint256 tIndex = uint256(seed) % 6;
+            uint256 tIndex = uint256(seed) % 5;
             if (tIndex == 0) {
-                tp[i] = LibSvg.SVG_TYPE_LEFT_HAND;
-            } else if (tIndex == 1) {
-                tp[i] = LibSvg.SVG_TYPE_RIGHT_HAND;
-            } else if (tIndex == 2) {
                 tp[i] = LibSvg.SVG_TYPE_CLOTHES;
-            } else if (tIndex == 3) {
+            } else if (tIndex == 1) {
+                tp[i] = LibSvg.SVG_TYPE_HAND;
+            } else if (tIndex == 2) {
                 tp[i] = LibSvg.SVG_TYPE_FACE;
-            } else if (tIndex == 4) {
+            } else if (tIndex == 3) {
                 tp[i] = LibSvg.SVG_TYPE_MOUTH;
-            } else if (tIndex == 5) {
+            } else if (tIndex == 4) {
                 tp[i] = LibSvg.SVG_TYPE_HEAD;
             }
         }

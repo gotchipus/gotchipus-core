@@ -9,8 +9,7 @@ library LibSvg {
     bytes32 internal constant SVG_TYPE_PHAROS = "gotchipus-pharos";
     bytes32 internal constant SVG_TYPE_BG = "gotchipus-bg";
     bytes32 internal constant SVG_TYPE_BODY = "gotchipus-body";
-    bytes32 internal constant SVG_TYPE_LEFT_HAND = "gotchipus-left-hand";
-    bytes32 internal constant SVG_TYPE_RIGHT_HAND = "gotchipus-right-hand";
+    bytes32 internal constant SVG_TYPE_HAND = "gotchipus-hand";
     bytes32 internal constant SVG_TYPE_CLOTHES = "gotchipus-clothes";
     bytes32 internal constant SVG_TYPE_FACE = "gotchipus-face";
     bytes32 internal constant SVG_TYPE_MOUTH = "gotchipus-mouth";
@@ -28,22 +27,40 @@ library LibSvg {
     function getWearbaleTypeIndex(bytes32 wearableType) internal pure returns (uint256) {
         if (wearableType == SVG_TYPE_BODY) {
             return 1;
-        } else if (wearableType == SVG_TYPE_LEFT_HAND) {
-            return 2;
-        } else if (wearableType == SVG_TYPE_RIGHT_HAND) {
-            return 3;
         } else if (wearableType == SVG_TYPE_CLOTHES) {
+            return 2;
+        } else if (wearableType == SVG_TYPE_HAND) {
+            return 3;
+        } else if (wearableType == SVG_TYPE_EYE) {
             return 4;
         } else if (wearableType == SVG_TYPE_FACE) {
             return 5;
         } else if (wearableType == SVG_TYPE_MOUTH) {
             return 6;
-        } else if (wearableType == SVG_TYPE_EYE) {
-            return 7;
         } else if (wearableType == SVG_TYPE_HEAD) {
-            return 8;
+            return 7;
         } else {
             return 0;
+        }
+    }
+
+    function getWearableTypeByIndex(uint8 index) internal pure returns (bytes32) {
+        if (index == 1) {
+            return SVG_TYPE_BODY;
+        } else if (index == 2) {
+            return SVG_TYPE_CLOTHES;
+        } else if (index == 3) {
+            return SVG_TYPE_HAND;
+        } else if (index == 4) {
+            return SVG_TYPE_EYE;
+        } else if (index == 5) {
+            return SVG_TYPE_FACE;
+        } else if (index == 6) {
+            return SVG_TYPE_MOUTH;
+        } else if (index == 7) {
+            return SVG_TYPE_HEAD;
+        } else {
+            return SVG_TYPE_BG;
         }
     }
 
