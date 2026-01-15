@@ -29,7 +29,7 @@ error InitializationFunctionReverted(address _initializationContractAddress, byt
 
 library WearableLibDiamond {
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("diamond.standard.diamond.storage");
-    address constant GOTCHIPUS_DIAMOND = 0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8;
+    address constant GOTCHIPUS_DIAMOND = 0x000000007B5758541e9d94a487B83e11Cd052437;
     
     struct FacetAddressAndSelectorPosition {
         address facetAddress;

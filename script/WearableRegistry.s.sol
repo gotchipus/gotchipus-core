@@ -1,20 +1,13 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.29;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 import { Script } from "forge-std/Script.sol";
-import { FacetSelectors } from "../test/utils/FacetSelectors.sol";
-import { GotchipusFacet } from "../src/facets/GotchipusFacet.sol";
-import { SvgFacet } from "../src/facets/SvgFacet.sol";
-import { Diamond } from "../src/Diamond.sol";
-import { IDiamondCut } from "../src/interfaces/IDiamondCut.sol";
-import { GotchiWearableFacet } from "../src/facets/GotchiWearableFacet.sol";
-import { TimeFacet } from "../src/facets/TimeFacet.sol";
-import { AttributesFacet } from "../src/facets/AttributesFacet.sol";
-import { MintFacet } from "../src/facets/MintFacet.sol";
 import { WearableInfo } from "../src/libraries/LibAppStorage.sol";
+import { Diamond } from "../src/Diamond.sol";
+import { GotchiWearableFacet } from "../src/facets/GotchiWearableFacet.sol";
 import { LibStrings } from "../src/libraries/LibStrings.sol";
 
-contract FacetAction is Script {
+contract WearableRegistry is Script  {
     bytes32 public constant BG_BYTES32 = "gotchipus-bg";
     bytes32 public constant BODY_BYTES32 = "gotchipus-body";
     bytes32 public constant EYE_BYTES32 = "gotchipus-eye";
@@ -25,62 +18,11 @@ contract FacetAction is Script {
     bytes32 public constant CLOTHES_BYTES32 = "gotchipus-clothes";
     
     function run() external {
-        action();
+        deploy();
     }
 
-    function action() public {
+    function deploy() public {
         vm.startBroadcast();
-
-        // AttributesFacet attr = new AttributesFacet();
-        Diamond diamond = Diamond(payable(0x000000007B5758541e9d94a487B83e11Cd052437));
-        // GotchiWearableFacet gotchiWearableFacet = GotchiWearableFacet(address(diamond));
-
-        // bytes32[] memory wTypes = new bytes32[](8);
-        // uint8[] memory lens = new uint8[](8);
-        // wTypes[0] = BG_BYTES32;
-        // wTypes[1] = BODY_BYTES32;
-        // wTypes[2] = EYE_BYTES32;
-        // wTypes[3] = HAND_BYTES32;
-        // wTypes[4] = FACE_BYTES32;
-        // wTypes[5] = MOUTH_BYTES32;
-        // wTypes[6] = HEAD_BYTES32;
-        // wTypes[7] = CLOTHES_BYTES32;
-
-        // lens[0] = 16;
-        // lens[1] = 8;
-        // lens[2] = 8;
-        // lens[3] = 14;
-        // lens[4] = 7;
-        // lens[5] = 6;
-        // lens[6] = 17;
-        // lens[7] = 9;
-
-        // gotchiWearableFacet.setCountWearablesByType(wTypes, lens);
-        
-        // uint256[] memory ids = new uint256[](84);
-        // for (uint256 i = 0; i < 84; i++) {
-        //     ids[i] = 86+i;
-        // }
-
-        // gotchiWearableFacet.deleteBatchWearable(ids);
-
-        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](1);
-        bytes4[] memory selectors = new bytes4[](1);
-        selectors[0] = bytes4(keccak256("freeMint()"));
-
-        facetCuts[0] = IDiamondCut.FacetCut({
-            facetAddress: address(0),
-            action: IDiamondCut.FacetCutAction.Remove,
-            functionSelectors: selectors
-        });
-
-        // facetCuts[1] = IDiamondCut.FacetCut({
-        //     facetAddress: address(mintFacet),
-        //     action: IDiamondCut.FacetCutAction.Replace,
-        //     functionSelectors: FacetSelectors.getSelectors("MintFacet")
-        // });
-
-        IDiamondCut(address(diamond)).diamondCut(facetCuts, address(0), "");
 
         WearableInfo[] memory infos = new WearableInfo[](85);
         // Backgrounds (0-15)
@@ -184,32 +126,32 @@ contract FacetAction is Script {
         infos[83] = WearableInfo("Hidden", "Mysterious concealment, covert existence.", "Gotchipus Team", MOUTH_BYTES32, 83);
         infos[84] = WearableInfo("Smile", "Optimistic attitude, symbol of hope.", "Gotchipus Team", MOUTH_BYTES32, 84);
 
-        // Diamond gotchiDiamond = Diamond(payable(0x000000007B5758541e9d94a487B83e11Cd052437));
-        // address facet = address(gotchiDiamond);
+        Diamond gotchiDiamond = Diamond(payable(0x8606b31a4e182735B283cA3339726d4130fCC5Ed));
+        address facet = address(gotchiDiamond);
 
-        // uint256 total = 85;
-        // uint256 batchSize = 15; 
+        uint256 total = 85;
+        uint256 batchSize = 15; 
 
-        // for (uint256 start = 0; start < total; start += batchSize) {
-        //     uint256 end = start + batchSize;
-        //     if (end > total) end = total;
+        for (uint256 start = 0; start < total; start += batchSize) {
+            uint256 end = start + batchSize;
+            if (end > total) end = total;
 
-        //     uint256 len = end - start;
+            uint256 len = end - start;
 
-        //     uint256[] memory tokenIds = new uint256[](len);
-        //     string[] memory urisPart = new string[](len);
-        //     WearableInfo[] memory infosPart = new WearableInfo[](len);
+            string[] memory urisPart = new string[](len);
+            WearableInfo[] memory infosPart = new WearableInfo[](len);
 
-        //     for (uint256 i = 0; i < len; i++) {
-        //         uint256 idx = start + i;
-        //         tokenIds[i] = idx;
-        //         urisPart[i] = LibStrings.strWithUint("https://app.gotchipus.com/wearable/metadata/", idx);
-        //         infosPart[i] = infos[idx];
-        //     }
+            for (uint256 i = 0; i < len; i++) {
+                uint256 idx = start + i;
+                urisPart[i] = LibStrings.strWithUint("https://app.gotchipus.com/wearable/metadata/", idx);
+                infosPart[i] = infos[idx];
+            }
 
-        //     GotchiWearableFacet(facet).updateBatchWearable(tokenIds, urisPart, infosPart);
-        // }
+            GotchiWearableFacet(facet).createBatchWearable(urisPart, infosPart);
+        }
 
         vm.stopBroadcast();
     }
+
+   
 }

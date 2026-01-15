@@ -1,37 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { AppStorage, Modifier, GotchipusInfo, EquipWearableType, MAX_BODY_NUM, MAX_TRAITS_NUM } from "../libraries/LibAppStorage.sol";
-import { LibGotchiConstants } from "../libraries/LibGotchiConstants.sol";
-import { IERC721Receiver } from "../interfaces/IERC721Receiver.sol";
+import { AppStorage, Modifier, GotchipusInfo, MAX_TRAITS_NUM } from "../libraries/LibAppStorage.sol";
 import { IERC721Enumerable } from "../interfaces/IERC721Enumerable.sol";
 import { IERC721 } from "../interfaces/IERC721.sol";
 import { LibMeta } from "../libraries/LibMeta.sol";
 import { LibERC721 } from "../libraries/LibERC721.sol";
-import { LibStrings } from "../libraries/LibStrings.sol";
-import { LibDiamond } from "../libraries/LibDiamond.sol";
-import { LibDna } from "../libraries/LibDna.sol";
-import { LibTime } from "../libraries/LibTime.sol";
-import { LibTransferHelper } from "../libraries/LibTransferHepler.sol";
-import { LibSvg } from "../libraries/LibSvg.sol";
-import { LibGotchiRarity } from "../libraries/LibGotchiRarity.sol";
-import { LibAttributes } from "../libraries/LibAttributes.sol";
-import { LibFaction } from "../libraries/LibFaction.sol";
-import { LibExperience } from "../libraries/LibExperience.sol";
-import { LibTransferHelper } from "../libraries/LibTransferHepler.sol";
-import { IGotchipusFacet } from "../interfaces/IGotchipusFacet.sol";
-import { IERC6551Registry } from "../interfaces/IERC6551Registry.sol";
 
 contract GotchipusFacet is Modifier {
-
-    struct SummonArgs {
-        uint256 gotchipusTokenId;
-        string gotchiName;
-        address collateralToken;
-        uint256 stakeAmount;
-        uint8 utc;
-        bytes story;
-    }
 
     function balanceOf(address _owner) external view returns (uint256) {
         require(_owner != address(0), "GotchipusFacet: owner can't is zero");
@@ -69,18 +45,6 @@ contract GotchipusFacet is Modifier {
         return s.symbol;
     }
 
-    function tokenURI(uint256 _tokenId) external view returns (string memory) {
-        GotchipusInfo storage _ownedPus = s.ownedGotchipusInfos[s.tokenOwners[_tokenId]][_tokenId];
-        if (_ownedPus.status == 0) {
-            return LibStrings.strWithUint(string.concat(s.baseUri, "pharos/"), _tokenId);
-        }
-        return LibStrings.strWithUint(string.concat(s.baseUri, "gotchipus/"), _tokenId);
-    }
-
-    function ownedTokenInfo(address _owner, uint256 _tokenId) external view returns (GotchipusInfo memory info_) {
-        info_ = s.ownedGotchipusInfos[_owner][_tokenId];
-    }
-
     function getApproved(uint256 _tokenId) external view returns (address) {
         require(_tokenId < s.allTokens.length, "ERC721: tokenId is invalid");
         return s.tokenApprovals[_tokenId];
@@ -89,31 +53,7 @@ contract GotchipusFacet is Modifier {
     function isApprovedForAll(address _owner, address _operator) external view returns (bool) {
         return s.operatorApprovals[_owner][_operator];
     }
-
-    function getGotchiTraitsIndex(uint256 tokenId) external view returns (uint8[MAX_TRAITS_NUM] memory indexs) {
-        indexs = s.allGotchiTraitsIndex[tokenId];
-    }
-
-    function getGotchiOrPharosInfo(address owner, uint8 status) external view returns (uint256[] memory tokenIds) {
-        uint256[] storage allIds = s.ownerTokens[owner];
-        uint256 count;
-
-        for (uint256 i = 0; i < allIds.length; i++) {
-            if (s.ownedGotchipusInfos[owner][allIds[i]].status == status) {
-                count++;
-            }
-        }
-
-        tokenIds = new uint256[](count);
-        uint256 j;
-        for (uint256 i = 0; i < allIds.length; i++) {
-            uint256 id = allIds[i];
-            if (s.ownedGotchipusInfos[owner][id].status == status) {
-                tokenIds[j++] = id;
-            }
-        }
-    }
-
+    
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
         return
             interfaceId == type(IERC721Enumerable).interfaceId ||
@@ -153,98 +93,6 @@ contract GotchipusFacet is Modifier {
         emit LibERC721.ApprovalForAll(LibMeta.msgSender(), _operator, _approved);
     } 
 
-    function setBaseURI(string memory _baseURI) external onlyOwner {
-        s.baseUri = _baseURI;
-    }
-
-    function freeMint() external {
-        uint256 tokenId = s.nextTokenId;
-        s.nextTokenId++;
-        LibERC721._mint(msg.sender, tokenId);
-    }
-
-    function mint(uint256 amount) external payable pharosMintIsPaused {
-        require(amount != 0 && amount <= LibGotchiConstants.MAX_PER_MINT, "Invalid amount");
-        bool isWhitelist = s.isWhitelist[msg.sender];
-
-        if (isWhitelist) {
-            uint256 tokenId = s.nextTokenId;
-            require(tokenId + 1 < LibGotchiConstants.MAX_TOTAL_SUPPLY, "MAX TOTAL SUPPLY");
-            s.nextTokenId++;
-
-            LibERC721._mint(msg.sender, tokenId);
-        } else {
-            require(amount * LibGotchiConstants.PHAROS_PRICE == msg.value, "Invalid value");
-            require(s.allTokens.length + amount <= LibGotchiConstants.MAX_TOTAL_SUPPLY, "MAX TOTAL SUPPLY");
-
-            for (uint256 i = 0; i < amount; i++) {
-                uint256 tokenId = s.nextTokenId++;
-                LibERC721._mint(msg.sender, tokenId);
-            }
-        }
-    }
-
-    function summonGotchipus(SummonArgs calldata _args) external payable onlyGotchipusOwner(_args.gotchipusTokenId) {
-        require(s.accountOwnedByTokenId[_args.gotchipusTokenId] == address(0), "GotchipusFacet: already summon");
-        
-        bytes32 salt = keccak256(abi.encode(block.chainid, _args.gotchipusTokenId, address(this)));
-        address account = IERC6551Registry(s.erc6551Registry).createAccount(
-            s.erc6551Implementation,
-            salt,
-            block.chainid,
-            address(this),
-            _args.gotchipusTokenId
-        );
-
-        if (_args.collateralToken == address(0)) {
-            LibTransferHelper.safeTransferETH(account, _args.stakeAmount);
-        } else {
-            LibTransferHelper.safeTransferFrom(_args.collateralToken, msg.sender, account, _args.stakeAmount);
-        }
-
-        uint256 randomDna = LibDna.getRandomGene(salt);
-        GotchipusInfo storage _ownedPus = s.ownedGotchipusInfos[msg.sender][_args.gotchipusTokenId];
-        _ownedPus.dna.geneSeed = randomDna;
-        _ownedPus.dna.ruleVersion = s.dnaRuleVersion;
-        _ownedPus.dna.generation = 0;
-        _ownedPus.name = _args.gotchiName;
-        _ownedPus.uri = LibStrings.strWithUint(string.concat(s.baseUri, "gotchipus/"), _args.gotchipusTokenId);
-        _ownedPus.story = _args.story;
-        _ownedPus.owner = msg.sender;
-        _ownedPus.collateral = _args.collateralToken;
-        _ownedPus.birthTime = uint32(block.timestamp);
-        _ownedPus.timezone = _args.utc;
-        
-        uint256 randomSeed = LibGotchiRarity.getRandomSeed(msg.sender, randomDna);
-        uint8 rarity = LibGotchiRarity.calculateRarity(msg.sender, randomSeed, _args.collateralToken, _args.stakeAmount);
-        _ownedPus.dna.rarity = rarity;
-
-        s.summonPityCount[msg.sender] = rarity == 0 ? s.summonPityCount[msg.sender] + 1 : 0;
-        
-        LibAttributes.initializeAttribute(msg.sender, _args.gotchipusTokenId, rarity, _args.collateralToken, _args.stakeAmount);
-        LibFaction.initializeFaction(msg.sender, _args.gotchipusTokenId, randomSeed, rarity);
-
-        _ownedPus.singer = msg.sender;
-        _ownedPus.status = 1;
-        
-        s.accountOwnedByTokenId[_args.gotchipusTokenId] = account;
-                
-        uint256 packed = LibDna.computePacked(_args.gotchipusTokenId);
-        LibDna.setPacked(_args.gotchipusTokenId, packed);
-
-        randomTraitsIndex(_args.gotchipusTokenId, account);
-    }
-
-    function addWhitelist(address[] calldata _whitelists, bool[] calldata _isWhitelists) external onlyOwner {
-        for (uint256 i = 0; i < _whitelists.length; i++) {
-            s.isWhitelist[_whitelists[i]] = _isWhitelists[i];
-        }
-    }
-
-    function paused(bool _paused) external onlyOwner {
-        s.isPaused = _paused;
-    }
-
     function burn(uint256 tokenId) external {
         require(LibERC721._isApprovedOrOwner(LibMeta.msgSender(), tokenId), 
                 "ERC721: caller is not owner nor approved");
@@ -254,44 +102,5 @@ contract GotchipusFacet is Modifier {
     function _safeTransfer(address _from, address _to, uint256 _tokenId, bytes memory _data) internal {
         LibERC721._transfer(_from, _to, _tokenId);
         require(LibERC721._checkOnERC721Received(_from, _to, _tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
-    }
-
-    function randomTraitsIndex(uint256 tokenId, address account) private {
-        bytes32 seed = keccak256(abi.encodePacked(
-            tokenId,
-            block.timestamp,
-            block.prevrandao
-        ));
-
-        for (uint256 i = 0; i < MAX_BODY_NUM; i++) {
-            bytes32 svgType;
-            if (i == 0) {
-                svgType = LibSvg.SVG_TYPE_BG;
-            } else if (i == 1) {
-                svgType = LibSvg.SVG_TYPE_BODY;
-            } else if (i == 2) {
-                svgType = LibSvg.SVG_TYPE_EYE;
-            }
-
-            uint256 wtIndex = LibSvg.getWearbaleTypeIndex(svgType);
-
-            uint8 count = s.countWearablesByType[svgType];
-            seed = keccak256(abi.encodePacked(seed, i));
-            uint8 index = uint8(uint256(seed) % uint256(count));
-
-            s.gotchiTraitsIndex[tokenId][uint8(wtIndex)] = index;
-            s.allGotchiTraitsIndex[tokenId][wtIndex] = index;
-            s.allOwnerEquipWearableType[account][wtIndex] = EquipWearableType({
-                wearableType: svgType,
-                wearableId: s.idByWearableType[svgType][index],
-                equiped: true
-            });
-
-            s.isOwnerEquipWearable[account][svgType] = true;
-        }
-    }
-
-    function withdrawETH() external onlyOwner {
-        LibTransferHelper.safeTransferETH(msg.sender, address(this).balance);
     }
 }

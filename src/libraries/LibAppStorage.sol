@@ -221,6 +221,7 @@ struct AppStorage {
      * LEGENDARY after 60
      */
     mapping(address => uint256) summonPityCount;
+    uint256 globalSalt;
 }
 
 library LibAppStorage {

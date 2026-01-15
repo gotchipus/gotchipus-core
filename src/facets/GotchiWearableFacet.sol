@@ -11,8 +11,6 @@ contract GotchiWearableFacet is Modifier {
     event AddWearable(address indexed wearable);
     event WearableURI(uint256 indexed tokenId, string indexed wearableUri);
 
-    uint256 public PRICE = 0.001 ether;
-
     function wearableBalanceOf(address owner, uint256 tokenId) public view returns (uint256 bn) {
         bn = s.ownerWearableBalances[owner][tokenId];
     }
@@ -137,6 +135,53 @@ contract GotchiWearableFacet is Modifier {
         emit WearableURI(wearableTokenId, tokenUri);
     }
 
+    function deleteWearable(uint256 wearableTokenId) external onlyOwner {
+        require(wearableTokenId < s.nextWearableTokenId, "WearableFacet: token does not exist");
+        
+        WearableInfo memory info = s.wearableInfo[wearableTokenId];
+        require(bytes(info.name).length > 0, "WearableFacet: wearable does not exist");
+        
+        bytes32 wearableType = info.wearableType;
+        uint8 typeIndex = s.typeIndexByWearableId[wearableTokenId][wearableType];
+        
+        s.idByWearableType[wearableType][typeIndex] = 0;
+        
+        delete s.typeIndexByWearableId[wearableTokenId][wearableType];
+        
+        require(s.countWearablesByType[wearableType] > 0, "WearableFacet: count underflow");
+        s.countWearablesByType[wearableType]--;
+        
+        delete s.wearableUri[wearableTokenId];
+        delete s.wearableInfo[wearableTokenId];
+        
+        emit WearableURI(wearableTokenId, "");
+    }
+
+    function deleteBatchWearable(uint256[] calldata wearableTokenIds) external onlyOwner {
+        for (uint256 i = 0; i < wearableTokenIds.length; i++) {
+            uint256 wearableTokenId = wearableTokenIds[i];
+            require(wearableTokenId < s.nextWearableTokenId, "WearableFacet: token does not exist");
+            
+            WearableInfo memory info = s.wearableInfo[wearableTokenId];
+            require(bytes(info.name).length > 0, "WearableFacet: wearable does not exist");
+            
+            bytes32 wearableType = info.wearableType;
+            uint8 typeIndex = s.typeIndexByWearableId[wearableTokenId][wearableType];
+            
+            s.idByWearableType[wearableType][typeIndex] = 0;
+            
+            delete s.typeIndexByWearableId[wearableTokenId][wearableType];
+            
+            require(s.countWearablesByType[wearableType] > 0, "WearableFacet: count underflow");
+            s.countWearablesByType[wearableType]--;
+            
+            delete s.wearableUri[wearableTokenId];
+            delete s.wearableInfo[wearableTokenId];
+            
+            emit WearableURI(wearableTokenId, "");
+        }
+    }
+
     function createBatchWearable(string[] calldata tokenUris, WearableInfo[] calldata infos) external onlyOwner {
         for (uint256 i = 0; i < tokenUris.length; i++) {
             uint256 wearableTokenId = s.nextWearableTokenId++;
@@ -152,6 +197,73 @@ contract GotchiWearableFacet is Modifier {
                 author: infos[i].author,
                 wearableType: infos[i].wearableType,
                 wearableId: uint8(wearableTokenId)
+            });
+
+            emit WearableURI(wearableTokenId, tokenUris[i]);
+        }
+    }
+
+    function updateWearable(uint256 wearableTokenId, string calldata tokenUri, WearableInfo calldata info) external onlyOwner {
+        require(wearableTokenId < s.nextWearableTokenId, "WearableFacet: token does not exist");
+        require(info.wearableId == uint8(wearableTokenId), "WearableFacet: wearableId mismatch");
+
+        WearableInfo memory oldInfo = s.wearableInfo[wearableTokenId];
+        bytes32 oldType = oldInfo.wearableType;
+        bytes32 newType = info.wearableType;
+
+        s.wearableUri[wearableTokenId] = tokenUri;
+
+        if (oldType != newType) {
+            uint8 oldTypeIndex = s.typeIndexByWearableId[wearableTokenId][oldType];
+            s.idByWearableType[oldType][oldTypeIndex] = 0;
+            delete s.typeIndexByWearableId[wearableTokenId][oldType];
+
+            uint8 newTypeCount = s.countWearablesByType[newType]++;
+            s.idByWearableType[newType][newTypeCount] = wearableTokenId;
+            s.typeIndexByWearableId[wearableTokenId][newType] = newTypeCount;
+        }
+
+        s.wearableInfo[wearableTokenId] = WearableInfo({
+            name: info.name,
+            description: info.description,
+            author: info.author,
+            wearableType: info.wearableType,
+            wearableId: info.wearableId
+        });
+
+        emit WearableURI(wearableTokenId, tokenUri);
+    }
+
+    function updateBatchWearable(uint256[] calldata wearableTokenIds, string[] calldata tokenUris, WearableInfo[] calldata infos) external onlyOwner {
+        require(wearableTokenIds.length == tokenUris.length && tokenUris.length == infos.length, "WearableFacet: length mismatch");
+
+        for (uint256 i = 0; i < wearableTokenIds.length; i++) {
+            uint256 wearableTokenId = wearableTokenIds[i];
+            require(wearableTokenId < s.nextWearableTokenId, "WearableFacet: token does not exist");
+            require(infos[i].wearableId == uint8(wearableTokenId), "WearableFacet: wearableId mismatch");
+
+            WearableInfo memory oldInfo = s.wearableInfo[wearableTokenId];
+            bytes32 oldType = oldInfo.wearableType;
+            bytes32 newType = infos[i].wearableType;
+
+            s.wearableUri[wearableTokenId] = tokenUris[i];
+
+            if (oldType != newType) {
+                uint8 oldTypeIndex = s.typeIndexByWearableId[wearableTokenId][oldType];
+                s.idByWearableType[oldType][oldTypeIndex] = 0;
+                delete s.typeIndexByWearableId[wearableTokenId][oldType];
+
+                uint8 newTypeCount = s.countWearablesByType[newType]++;
+                s.idByWearableType[newType][newTypeCount] = wearableTokenId;
+                s.typeIndexByWearableId[wearableTokenId][newType] = newTypeCount;
+            }
+
+            s.wearableInfo[wearableTokenId] = WearableInfo({
+                name: infos[i].name,
+                description: infos[i].description,
+                author: infos[i].author,
+                wearableType: infos[i].wearableType,
+                wearableId: infos[i].wearableId
             });
 
             emit WearableURI(wearableTokenId, tokenUris[i]);
@@ -305,10 +417,22 @@ contract GotchiWearableFacet is Modifier {
     }
 
     function mintWearable(address sender, uint256 wearableTokenId, uint256 amount) external payable onlyWearable {
-        require(amount * PRICE == msg.value, "WearableFacet: Invalid value");
+        require(amount * 0.001 ether == msg.value, "WearableFacet: Invalid value");
 
         s.ownerWearableBalances[sender][wearableTokenId] += amount;
         emit IWearableFacet.TransferSingle(sender, address(0), sender, wearableTokenId, amount);
+    }
+
+    function batchMintWearable(address sender, uint256[] calldata wearableTokenIds, uint256[] calldata amounts) external payable onlyWearable {
+        require(wearableTokenIds.length == amounts.length, "WearableFacet: Invalid amount");
+        
+        uint256 totalValue = 0.001 ether * amounts.length;
+        require(totalValue == msg.value, "WearableFacet: Invalid value");
+
+        for (uint256 i = 0; i < amounts.length; i++) {
+            s.ownerWearableBalances[sender][wearableTokenIds[i]] = amounts[i];
+            emit IWearableFacet.TransferSingle(sender, address(0), sender, wearableTokenIds[i], amounts[i]);
+        }
     }
 
     function claimWearable(address sender) external onlyWearable {
@@ -347,6 +471,58 @@ contract GotchiWearableFacet is Modifier {
             s.ownerWearableBalances[sender][wearableId] += 1;
 
             emit IWearableFacet.TransferSingle(sender, address(0), sender, wearableId, 1);
+        }
+    }
+
+    // test functions 
+
+    function getCountWearablesByType(bytes32 wearableType) external view returns (uint256 c_) {
+        c_ = s.countWearablesByType[wearableType];
+    }
+
+    function setCountWearablesByType(bytes32[] memory wearableTypes, uint8[] memory lens) external onlyOwner {
+        for (uint256 i = 0; i < wearableTypes.length; i++) {
+            s.countWearablesByType[wearableTypes[i]] = lens[i];
+        }
+    }
+
+    function getNextTokenId() external view returns (uint256) {
+        return s.nextWearableTokenId;
+    }
+
+    function setNextTokenId(uint256 next_) external onlyOwner {
+        s.nextWearableTokenId = next_;
+    }
+
+    function getIdByWearableType(bytes32 wearableType, uint8 index) external view returns (uint256) {
+        return s.idByWearableType[wearableType][index];
+    }
+
+    function getRandomTraitsIndex(uint256 tokenId, address account, address sender, uint256 preIndex) external view returns (uint8[3] memory indexs) {
+        bytes32 seed = keccak256(abi.encodePacked(
+            tokenId,
+            account,
+            sender,
+            s.globalSalt,
+            preIndex
+        ));
+
+        for (uint256 i = 0; i < 3; i++) {
+            bytes32 svgType;
+            if (i == 0) {
+                svgType = LibSvg.SVG_TYPE_BG;
+            } else if (i == 1) {
+                svgType = LibSvg.SVG_TYPE_BODY;
+            } else if (i == 2) {
+                svgType = LibSvg.SVG_TYPE_EYE;
+            }
+
+            uint8 count = s.countWearablesByType[svgType];
+            seed = keccak256(abi.encodePacked(seed, i));
+            uint8 index = uint8(uint256(seed) % uint256(count));
+            // uint256 wearabelId = s.idByWearableType[svgType][index];
+
+            indexs[i] = index;
         }
     }
 }

@@ -14,3 +14,5 @@ docs/
 
 # mock
 /src/mockContract/
+
+node_modules/

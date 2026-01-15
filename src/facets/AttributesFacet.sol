@@ -14,11 +14,13 @@ contract AttributesFacet is Modifier {
         s.lastPetTime[gotchiTokenId] = uint32(block.timestamp);
 
         GotchipusInfo storage pus = s.ownedGotchipusInfos[msg.sender][gotchiTokenId];
-        pus.core.experience = (pus.core.experience + 20 >= type(uint32).max) ? type(uint32).max : pus.core.experience + 20;
-        pus.states.health = (pus.states.health + 20 >= type(uint8).max) ? type(uint8).max : pus.states.health + 20;
-        pus.states.energy = (pus.states.energy + 20 >= type(uint8).max) ? type(uint8).max : pus.states.energy + 20;
-        pus.states.morale = (pus.states.morale + 20 >= type(uint8).max) ? type(uint8).max : pus.states.morale + 20;
-        pus.states.focus = (pus.states.focus + 20 >= type(uint8).max) ? type(uint8).max : pus.states.focus + 20;
+
+        pus.core.experience = LibAttributes.addClampedUint32(pus.core.experience, 20);
+        pus.states.health = LibAttributes.addClampedUint8(pus.states.health, 20);
+        pus.states.energy = LibAttributes.addClampedUint8(pus.states.energy, 20);
+        pus.states.morale = LibAttributes.addClampedUint8(pus.states.morale, 20);
+        pus.states.focus  = LibAttributes.addClampedUint8(pus.states.focus, 20);
+
         pus.states.lastInteraction = uint32(block.timestamp);
         pus.states.currentMood = LibDynamicStates.GotchiMood.HAPPY;
         pus.leveling.currentExp += 20;

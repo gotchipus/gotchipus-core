@@ -28,11 +28,11 @@ interface IHook {
     
     /// @notice Returns the permissions that this hook has
     /// @return permissions A struct of boolean flags indicating which hooks are implemented
-    function getHookPermissions() external pure returns (Permissions memory);
+    function getHookPermissions() external pure returns (Permissions memory permissions);
 
     /// @dev MUST return this value on success: bytes4(keccak256("HOOK_SUCCESS"))
-    function beforeExecute(HookParams calldata params) external returns (bytes4);
+    function beforeExecute(HookParams calldata params) external returns (bytes4 magic);
 
-    function afterExecute(HookParams calldata params) external returns (bytes4);
+    function afterExecute(HookParams calldata params) external returns (bytes4 magic);
 }
 

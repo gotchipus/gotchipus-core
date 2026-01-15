@@ -2,44 +2,83 @@
 pragma solidity ^0.8.29;
 
 import { IHook } from "../interfaces/IHook.sol";
-import { LibHooks } from "../libraries/LibHooks.sol";
 
 abstract contract BaseHook is IHook {
-    address public immutable diamond;
+    bytes4 public constant HOOK_SUCCESS = bytes4(keccak256("HOOK_SUCCESS"));
+    address public immutable gotchipus;
 
-    error NotDiamond();
+    error NotGotchipus();
     error HookNotImplemented();
-    
-    modifier onlyDiamond() {
-        if (msg.sender != diamond) revert NotDiamond();
+
+    constructor(address _gotchipus) {
+        gotchipus = _gotchipus;
+    }
+
+    modifier onlyGotchipus() {
+        if (msg.sender != gotchipus) {
+            revert NotGotchipus();
+        }
         _;
     }
 
-    constructor(address _diamond) {
-        diamond = _diamond;
-        
-        validateHookAddress(this);
+    function getHookPermissions() external pure virtual returns (Permissions memory) {
+        return Permissions({
+            beforeExecute: false,
+            afterExecute: false
+        });
     }
 
-    function getHookPermissions() public pure virtual returns (IHook.Permissions memory);
-
-    function validateHookAddress(BaseHook _this) internal pure virtual {
-        LibHooks.validateHookPermissions(_this, getHookPermissions());
+    function beforeExecute(HookParams calldata params) external virtual onlyGotchipus returns (bytes4) {
+        _beforeExecute(params);
+        return HOOK_SUCCESS;
     }
 
-    function beforeExecute(HookParams calldata params) external onlyDiamond returns (bytes4) {
-        return _beforeExecute(params);
+    function afterExecute(HookParams calldata params) external virtual onlyGotchipus returns (bytes4) {
+        _afterExecute(params);
+        return HOOK_SUCCESS;
     }
 
-    function _beforeExecute(HookParams calldata) internal virtual returns (bytes4) {
+    function _beforeExecute(HookParams calldata params) internal virtual {}
+    function _afterExecute(HookParams calldata params) internal virtual {}
+}
+
+abstract contract BeforeExecuteHook is BaseHook {
+    constructor(address _gotchipus) BaseHook(_gotchipus) {}
+
+    function getHookPermissions() external pure override returns (Permissions memory) {
+        return Permissions({
+            beforeExecute: true,
+            afterExecute: false
+        });
+    }
+
+    function afterExecute(HookParams calldata) external pure override returns (bytes4) {
         revert HookNotImplemented();
     }
+}
 
-    function afterExecute(HookParams calldata params) external onlyDiamond returns (bytes4) {
-        return _afterExecute(params);
+abstract contract AfterExecuteHook is BaseHook {
+    constructor(address _gotchipus) BaseHook(_gotchipus) {}
+
+    function getHookPermissions() external pure override returns (Permissions memory) {
+        return Permissions({
+            beforeExecute: false,
+            afterExecute: true
+        });
     }
 
-    function _afterExecute(HookParams calldata) internal virtual returns (bytes4) {
+    function beforeExecute(HookParams calldata) external pure override returns (bytes4) {
         revert HookNotImplemented();
+    }
+}
+
+abstract contract FullHook is BaseHook {
+    constructor(address _gotchipus) BaseHook(_gotchipus) {}
+
+    function getHookPermissions() external pure override returns (Permissions memory) {
+        return Permissions({
+            beforeExecute: true,
+            afterExecute: true
+        });
     }
 }

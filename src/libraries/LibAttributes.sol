@@ -76,4 +76,20 @@ library LibAttributes {
 
         return [strength, defense, mind, vitality, agility, luck];
     }
+
+    function addClampedUint8(uint8 value, uint8 amount) internal pure returns (uint8) {
+        unchecked {
+            uint256 v = uint256(value) + uint256(amount);
+            if (v > type(uint8).max) return type(uint8).max;
+            return uint8(v);
+        }
+    }
+
+    function addClampedUint32(uint32 value, uint32 amount) internal pure returns (uint32) {
+        unchecked {
+            uint256 v = uint256(value) + uint256(amount);
+            if (v > type(uint32).max) return type(uint32).max;
+            return uint32(v);
+        }
+    }
 }

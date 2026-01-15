@@ -19,6 +19,14 @@ contract WearableFacet {
         gFacet = GotchipusFacet(WearableLibDiamond.GOTCHIPUS_DIAMOND);
     }
 
+    function getGotchiWearableFacet() external pure returns (address) {
+        return address(gotchiWearableFacet());
+    }
+
+    function getGotchipusFacet() external pure returns (address) {
+        return address(gotchipusFacet());
+    }
+
     function name() external pure returns (string memory) {
         return "Gotchipus Wearables";
     }
@@ -65,6 +73,10 @@ contract WearableFacet {
 
     function mintWearable(uint256 wearableTokenId, uint256 amount) external payable {
         gotchiWearableFacet().mintWearable{value: msg.value}(msg.sender, wearableTokenId, amount);
+    }
+
+    function batchMintWearable(uint256[] calldata wearableTokenIds, uint256[] calldata amounts) external payable {
+        gotchiWearableFacet().batchMintWearable{value: msg.value}(msg.sender, wearableTokenIds, amounts);
     }
 
     function claimWearable() external {

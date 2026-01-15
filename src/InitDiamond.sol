@@ -21,7 +21,8 @@ contract InitDiamond {
         TraitsOffset[] traitsOffset;
         address erc6551Registry;
         address erc6551AccountImplementation;
-        bytes32[6] svgTypes;
+        bytes32[8] svgTypes;
+        uint256 salt;
     }
 
     function init(Args calldata _args) external {
@@ -33,7 +34,8 @@ contract InitDiamond {
         s.traitsOffset = _args.traitsOffset;
         s.erc6551Registry = _args.erc6551Registry;
         s.erc6551Implementation = _args.erc6551AccountImplementation;
-        
+        s.globalSalt = _args.salt;
+
         for (uint256 i = 0; i < _args.svgTypes.length; i++) {
             s.svgTypeBytes32[uint8(i)] = _args.svgTypes[i];
         }

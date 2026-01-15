@@ -4,3 +4,6 @@
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/lib/openzeppelin-contracts
+[submodule "lib/sdk"]
+	path = lib/sdk
+	url = https://github.com/gotchipus/sdk

@@ -8,13 +8,14 @@ import { IGotchipusFacet } from "../../src/interfaces/IGotchipusFacet.sol";
 import { ISvgFacet } from "../../src/interfaces/ISvgFacet.sol";
 import { LibSvg } from "../../src/libraries/LibSvg.sol";
 import { GetSvgBytes } from "../utils/GetSvgBytes.sol";
-
+import { IMintFacet } from "../../src/interfaces/IMintFacet.sol";
+import { IMetadataFacet } from "../../src/interfaces/IMetadataFacet.sol";
 
 contract SvgFacetTest is DiamondFixture {
     uint256 price = 0.04 ether;
 
     function _doMint(uint256 amount) internal {
-        IGotchipusFacet gotchi = IGotchipusFacet(address(diamond));
+        IMintFacet gotchi = IMintFacet(address(diamond));
         uint256 payValue = amount * price;
         gotchi.mint{value: payValue}(amount);
     }
@@ -103,18 +104,19 @@ contract SvgFacetTest is DiamondFixture {
         });
         svgFacet.storeSvg("pharos", pharosItems);
 
-        IGotchipusFacet.SummonArgs memory args = IGotchipusFacet.SummonArgs({
+        IMintFacet.SummonArgs memory args = IMintFacet.SummonArgs({
             gotchipusTokenId: 0,
             gotchiName: "Gotchi No.1",
             collateralToken: address(0),
             stakeAmount: 0.1 ether,
             utc: 0,
-            story: "I'm Gotchi"
+            story: "I'm Gotchi",
+            preIndex: 0
         });
 
-        IGotchipusFacet(address(diamond)).summonGotchipus{value: 0.1 ether}(args);
+        IMintFacet(address(diamond)).summonGotchipus{value: 0.1 ether}(args);
         
-        uint8[] memory indexs = IGotchipusFacet(address(diamond)).getGotchiTraitsIndex(0);
+        uint8[8] memory indexs = IMetadataFacet(address(diamond)).getGotchiTraitsIndex(0);
         for (uint256 i = 0; i < indexs.length; i++) {
             console.log("indexs[%s] = %s", i, indexs[i]);
         }

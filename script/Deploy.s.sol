@@ -20,7 +20,10 @@ import { SvgFacet } from "../src/facets/SvgFacet.sol";
 import { PaymasterFacet } from "../src/facets/PaymasterFacet.sol";
 import { LibSvg } from "../src/libraries/LibSvg.sol";
 import { FacetSelectors } from "../test/utils/FacetSelectors.sol";
-
+import { TimeFacet } from "../src/facets/TimeFacet.sol";
+import { MintFacet } from "../src/facets/MintFacet.sol";
+import { MetadataFacet } from "../src/facets/MetadataFacet.sol";
+import { GotchiWearableFacet } from "../src/facets/GotchiWearableFacet.sol";
 
 contract Deploy is Script {
     struct Deployment {
@@ -38,6 +41,10 @@ contract Deploy is Script {
         ERC6551Facet erc6551Facet;
         SvgFacet svgFacet;
         PaymasterFacet paymasterFacet;
+        TimeFacet timeFacet;
+        MintFacet mintFacet;
+        MetadataFacet metadataFacet;
+        GotchiWearableFacet gotchiWearableFacet;
     }
 
     function run() external returns (Deployment memory) {
@@ -47,47 +54,43 @@ contract Deploy is Script {
     /** 
      * Pharos testnet
      * create2Factory: 0x000000f2529CaFE47f13BC4d674e343A97A870c1
-     * diamond: 0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8, 
+     * diamond: 0x000000007B5758541e9d94a487B83e11Cd052437, 
      * ERC6551Registry: 0x000000E7C8746fdB64D791f6bb387889c5291454
-     * ERC6551Account: 0xee8862134dFe901C62dbC72B25930da791a20CFf
+     * ERC6551Account: 0xb98aA33B8a0C6Ca0fb5667DC2601032Bff92D7B3
      * 
-     * initDiamond: 0xd7178B120D93cd975737902d8c8e46D430eBd502, 
-     * diamondCutFacet: 0xfb6CF9f914c76ccDc3Fc722b5c0D3EFa5C4F7DFA, 
-     * diamondLoupeFacet: 0xd87AC654aA730ca72681a3Aa29898a8F0ae0dd57, 
-     * gotchipusFacet: 0x450C122c5A317EFF2A7E0cb6AF65a483c2d530D7, 
-     * ownershipFacet: 0x705F094215317bAe890b78d1b374E66caa052c12, 
-     * attributesFacet: 0x14E66f0056b336a87Fd5Ae876a03b1a5fbdBDC66, 
-     * dnaFacet: 0x8A1B589729bC9e3F6C79940331EfC7a2bD83039d, 
-     * hooksFacet: 0xaf04Cb9171772d4E2a974393734CA6BD009ea56B, 
-     * svgFacet: 0x902ACfCcD0b5430Bc4A9a004cdBd53F2E0a6438d
-     * paymasterFacet: 0x75E7765769789DcF2E7392B648d292239aDb3f2C
-     * gotchiWearableFacet: 0x034e5b8F4675D8b21177a2bCa3dd2cAC9b927465
-     * TimeFacet: 0xf0B248C4141931D592eC5b28FDB60d3B893d4a23
+     * Test diamond
+     * 0x8606b31a4e182735B283cA3339726d4130fCC5Ed
      */
 
     function deploy() public returns (Deployment memory) {
         vm.startBroadcast();
-
-        // DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
-        // DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet();
-        // OwnershipFacet ownershipFacet = new OwnershipFacet();
-        DiamondCutFacet diamondCutFacet = DiamondCutFacet(0xfb6CF9f914c76ccDc3Fc722b5c0D3EFa5C4F7DFA);
-        DiamondLoupeFacet diamondLoupeFacet = DiamondLoupeFacet(0xd87AC654aA730ca72681a3Aa29898a8F0ae0dd57);
-        OwnershipFacet ownershipFacet = OwnershipFacet(0x705F094215317bAe890b78d1b374E66caa052c12);
+        
+        DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
+        DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet();
+        OwnershipFacet ownershipFacet = new OwnershipFacet();
         InitDiamond initDiamond = new InitDiamond();
         GotchipusFacet gotchipusFacet = new GotchipusFacet();
         AttributesFacet attributesFacet = new AttributesFacet();
         DNAFacet dnaFacet = new DNAFacet();
         HooksFacet hooksFacet = new HooksFacet();
-        ERC6551Account erc6551Account = ERC6551Account(payable(0xee8862134dFe901C62dbC72B25930da791a20CFf));
+        ERC6551Account erc6551Account = ERC6551Account(payable(0xb98aA33B8a0C6Ca0fb5667DC2601032Bff92D7B3));
         ERC6551Registry erc6551Registry = ERC6551Registry(0x000000E7C8746fdB64D791f6bb387889c5291454);
         ERC6551Facet erc6551Facet = new ERC6551Facet();
         SvgFacet svgFacet = new SvgFacet();
         PaymasterFacet paymasterFacet = new PaymasterFacet();
+        TimeFacet timeFacet = new TimeFacet();
+        MintFacet mintFacet = new MintFacet();
+        MetadataFacet metadataFacet = new MetadataFacet();
+        GotchiWearableFacet gotchiWearableFacet = new GotchiWearableFacet();
 
-        // Diamond diamond = new Diamond(owner, address(diamondCutFacet), address(diamondLoupeFacet), address(ownershipFacet));
-        Diamond diamond = Diamond(payable(0x0000000038f050528452D6Da1E7AACFA7B3Ec0a8));
-        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](7);
+        Diamond diamond = new Diamond(msg.sender, address(diamondCutFacet), address(diamondLoupeFacet), address(ownershipFacet));
+
+        // DiamondCutFacet diamondCutFacet = DiamondCutFacet(0xDeD276F88612f95d675aaEe3694ABB18a66F8951);
+        // DiamondLoupeFacet diamondLoupeFacet = DiamondLoupeFacet(0x24ded15aed0CCe141EAf98BF15bC8843D7285a62);
+        // OwnershipFacet ownershipFacet = OwnershipFacet(0x966d7AB2A5B4A1d74271eDD6974d79D2f52d759a);
+        // Diamond diamond = Diamond(payable(0x000000007B5758541e9d94a487B83e11Cd052437));
+
+        IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](11);
         facetCuts[0] = IDiamondCut.FacetCut({
             facetAddress: address(erc6551Facet),
             action: IDiamondCut.FacetCutAction.Add,
@@ -123,15 +126,37 @@ contract Deploy is Script {
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: FacetSelectors.getSelectors("PaymasterFacet")
         });
+        facetCuts[7] = IDiamondCut.FacetCut({
+            facetAddress: address(timeFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: FacetSelectors.getSelectors("TimeFacet")
+        });
+        facetCuts[8] = IDiamondCut.FacetCut({
+            facetAddress: address(mintFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: FacetSelectors.getSelectors("MintFacet")
+        });
+        facetCuts[9] = IDiamondCut.FacetCut({
+            facetAddress: address(metadataFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: FacetSelectors.getSelectors("MetadataFacet")
+        });
+        facetCuts[10] = IDiamondCut.FacetCut({
+            facetAddress: address(gotchiWearableFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: FacetSelectors.getSelectors("GotchiWearableFacet")
+        });
 
-        bytes32[6] memory svgTypes;
+        bytes32[8] memory svgTypes;
         svgTypes[0] = LibSvg.SVG_TYPE_BG;
         svgTypes[1] = LibSvg.SVG_TYPE_BODY;
-        svgTypes[2] = LibSvg.SVG_TYPE_EYE;
+        svgTypes[2] = LibSvg.SVG_TYPE_CLOTHES;
         svgTypes[3] = LibSvg.SVG_TYPE_HAND;
-        svgTypes[4] = LibSvg.SVG_TYPE_HEAD;
-        svgTypes[5] = LibSvg.SVG_TYPE_CLOTHES;
-
+        svgTypes[4] = LibSvg.SVG_TYPE_EYE;
+        svgTypes[5] = LibSvg.SVG_TYPE_FACE;
+        svgTypes[6] = LibSvg.SVG_TYPE_MOUTH;
+        svgTypes[7] = LibSvg.SVG_TYPE_HEAD;
+        
         InitDiamond.Args memory initArgs = InitDiamond.Args({
             name: "Gotchipus",
             symbol: "GOTCHI",
@@ -140,14 +165,17 @@ contract Deploy is Script {
             traitsOffset: getTraitsOffset(),
             erc6551Registry: address(erc6551Registry),
             erc6551AccountImplementation: address(erc6551Account),
-            svgTypes: svgTypes
+            svgTypes: svgTypes,
+            salt: 46785146710873639958810097543422045518556785791473492795158444787863316856832
         });
         bytes memory initCalldata = abi.encodeWithSelector(InitDiamond.init.selector, initArgs);
 
         IDiamondCut(address(diamond)).diamondCut(facetCuts, address(initDiamond), initCalldata);
 
-        vm.stopBroadcast();
+        GotchiWearableFacet(address(diamond)).setWearableDiamond(address(0x22646d4E832132E93F2dEF9Ea875Aa5329B7feF4));
 
+        vm.stopBroadcast();
+        
         return Deployment({
             diamond: diamond,
             initDiamond: initDiamond,
@@ -162,7 +190,11 @@ contract Deploy is Script {
             erc6551Registry: erc6551Registry,
             erc6551Facet: erc6551Facet,
             svgFacet: svgFacet,
-            paymasterFacet: paymasterFacet
+            paymasterFacet: paymasterFacet,
+            timeFacet: timeFacet,
+            mintFacet: mintFacet,
+            metadataFacet: metadataFacet,
+            gotchiWearableFacet: gotchiWearableFacet
         });
     }
 
