@@ -19,6 +19,7 @@ contract ERC6551Facet is Modifier, ReentrancyGuard {
         uint256 _tokenId, 
         address _to, 
         uint256 _value, 
+        IHook hook,
         bytes calldata _data
     ) external onlyOwnerOrPaymaster(_tokenId) nonReentrant returns (bytes memory result) {
         require(_account != address(0), "ERC6551Facet: Invalid account");
@@ -31,12 +32,13 @@ contract ERC6551Facet is Modifier, ReentrancyGuard {
             to: _to,
             value: _value,
             selector: bytes4(_data),
+            hook: address(hook),
             hookData: _data,
             success: false,
             returnData: bytes("")
         });
 
-        LibHooks.runHooks(_tokenId, IHook.GotchiEvent.BeforeExecute, params);
+        LibHooks.runHooks(_tokenId, address(hook), IHook.GotchiEvent.BeforeExecute, params);
 
         bool success;
         (success, result) = _account.call(abi.encodeWithSignature("execute(address,uint256,bytes,uint8)", _to, _value, _data, 0));
@@ -54,6 +56,6 @@ contract ERC6551Facet is Modifier, ReentrancyGuard {
         params.success = success;
         params.returnData = result;
 
-        LibHooks.runHooks(_tokenId, IHook.GotchiEvent.AfterExecute, params);
+        LibHooks.runHooks(_tokenId, address(hook), IHook.GotchiEvent.AfterExecute, params);
     }
 }

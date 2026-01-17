@@ -12,6 +12,7 @@ library LibHooks {
     bytes4 internal constant HOOK_SUCCESS = bytes4(keccak256("HOOK_SUCCESS"));
 
     error HookPermissionsNotValid(address hook);
+    error HookNotFound(uint256 tokenId, address hook);
     error HookCallFailed();
     error InvalidHookResponse();
 
@@ -50,16 +51,18 @@ library LibHooks {
         return s.isValidHook[tokenId][address(hook)];
     }
 
-    function runHooks(uint256 tokenId, IHook.GotchiEvent eventType, IHook.HookParams memory params) internal {
+    function runHooks(
+        uint256 tokenId, 
+        address hook,
+        IHook.GotchiEvent eventType, 
+        IHook.HookParams memory params
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        address[] storage hooks = s.tokenHooksByEvent[tokenId][eventType];
-        uint256 length = hooks.length;
 
-        if (length == 0) return;
-
-        for (uint256 i = 0; i < length; i++) {
-            address hook = hooks[i];
-            if (!s.isValidHook[tokenId][hook]) continue;
+        if (hook != address(0)) {
+            if (!s.isValidHook[tokenId][hook]) {
+                revert HookNotFound(tokenId, hook);
+            }
 
             _executeHook(tokenId, hook, eventType, params);
         }
@@ -107,19 +110,17 @@ library LibHooks {
 
     function runHooksWithGasLimit(
         uint256 tokenId,
+        address hook,
         IHook.GotchiEvent eventType,
         IHook.HookParams memory params,
         uint256 gasLimit
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        address[] storage hooks = s.tokenHooksByEvent[tokenId][eventType];
-        uint256 length = hooks.length;
 
-        if (length == 0) return;
-
-        for (uint256 i = 0; i < length; i++) {
-            address hook = hooks[i];
-            if (!s.isValidHook[tokenId][hook]) continue;
+        if (hook != address(0)) {
+            if (!s.isValidHook[tokenId][hook]) {
+                revert HookNotFound(tokenId, hook);
+            }
 
             _executeHookWithGasLimit(tokenId, hook, eventType, params, gasLimit);
         }
