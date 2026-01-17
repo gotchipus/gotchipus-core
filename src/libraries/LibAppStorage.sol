@@ -181,6 +181,7 @@ struct AppStorage {
     // Hooks
     // address can owned multiple hooks
     mapping(uint256 => mapping(IHook.GotchiEvent => address[])) tokenHooksByEvent;
+    mapping(uint256 => mapping(IHook.GotchiEvent => mapping(address => uint256))) hookIndex;
     mapping(uint256 => mapping(address => bool)) isValidHook;
 
     // ext contract

@@ -27,6 +27,7 @@ contract HooksFacet is Modifier {
         _validateHookSupportsEvent(hook, eventType);
 
         s.tokenHooksByEvent[tokenId][eventType].push(address(hook));
+        s.hookIndex[tokenId][eventType][address(hook)] = s.tokenHooksByEvent[tokenId][eventType].length;
         s.isValidHook[tokenId][address(hook)] = true;
 
         emit HookAdded(tokenId, eventType, address(hook));
@@ -52,7 +53,10 @@ contract HooksFacet is Modifier {
             if (!permissions.beforeExecute) {
                 revert HookDoesNotSupportEvent(address(hook), IHook.GotchiEvent.BeforeExecute);
             }
+
             s.tokenHooksByEvent[tokenId][IHook.GotchiEvent.BeforeExecute].push(address(hook));
+            uint256 len = s.tokenHooksByEvent[tokenId][IHook.GotchiEvent.BeforeExecute].length;
+            s.hookIndex[tokenId][IHook.GotchiEvent.BeforeExecute][address(hook)] = len;
             emit HookAdded(tokenId, IHook.GotchiEvent.BeforeExecute, address(hook));
         }
 
@@ -60,7 +64,10 @@ contract HooksFacet is Modifier {
             if (!permissions.afterExecute) {
                 revert HookDoesNotSupportEvent(address(hook), IHook.GotchiEvent.AfterExecute);
             }
+
             s.tokenHooksByEvent[tokenId][IHook.GotchiEvent.AfterExecute].push(address(hook));
+            uint256 len = s.tokenHooksByEvent[tokenId][IHook.GotchiEvent.AfterExecute].length;
+            s.hookIndex[tokenId][IHook.GotchiEvent.AfterExecute][address(hook)] = len;
             emit HookAdded(tokenId, IHook.GotchiEvent.AfterExecute, address(hook));
         }
 
@@ -68,33 +75,31 @@ contract HooksFacet is Modifier {
     }
 
     function removeHook(uint256 tokenId, IHook.GotchiEvent eventType, IHook hook) external onlyGotchipusOwner(tokenId) {
-        if (!s.isValidHook[tokenId][address(hook)]) {
-            revert HookNotFound(tokenId, address(hook));
+        address hookAddr = address(hook);
+        uint256 index = s.hookIndex[tokenId][eventType][hookAddr];
+        
+        if (index == 0) {
+            revert HookNotFound(tokenId, hookAddr);
         }
 
         address[] storage hooks = s.tokenHooksByEvent[tokenId][eventType];
-        uint256 len = hooks.length;
-        bool found = false;
+        uint256 lastIndex = hooks.length;
 
-        for (uint256 i = 0; i < len; i++) {
-            if (hooks[i] == address(hook)) {
-                hooks[i] = hooks[len - 1];
-                hooks.pop();
-                found = true;
-                break;
-            }
+        if (index != lastIndex) {
+            address lastHook = hooks[lastIndex - 1];
+            hooks[index - 1] = lastHook;
+            s.hookIndex[tokenId][eventType][lastHook] = index;
         }
 
-        if (!found) {
-            revert HookNotFound(tokenId, address(hook));
-        }
+        hooks.pop();
+        delete s.hookIndex[tokenId][eventType][hookAddr];
 
-        bool stillRegistered = _isHookRegisteredInAnyEvent(tokenId, address(hook));
+        bool stillRegistered = _isHookRegisteredInAnyEvent(tokenId, hookAddr);
         if (!stillRegistered) {
-            s.isValidHook[tokenId][address(hook)] = false;
+            s.isValidHook[tokenId][hookAddr] = false;
         }
 
-        emit HookRemoved(tokenId, eventType, address(hook));
+        emit HookRemoved(tokenId, eventType, hookAddr);
     }
 
     function removeHookCompletely(uint256 tokenId, IHook hook) external onlyGotchipusOwner(tokenId) {
@@ -154,7 +159,7 @@ contract HooksFacet is Modifier {
         count = s.tokenHooksByEvent[tokenId][eventType].length;
     }
 
-    function _validateHookSupportsEvent(IHook hook, IHook.GotchiEvent eventType) internal view {
+    function _validateHookSupportsEvent(IHook hook, IHook.GotchiEvent eventType) internal pure {
         IHook.Permissions memory permissions = hook.getHookPermissions();
 
         if (eventType == IHook.GotchiEvent.BeforeExecute) {
@@ -187,15 +192,18 @@ contract HooksFacet is Modifier {
         IHook.GotchiEvent eventType,
         address hook
     ) internal {
+        uint256 index = s.hookIndex[tokenId][eventType][hook];
         address[] storage hooks = s.tokenHooksByEvent[tokenId][eventType];
-        uint256 len = hooks.length;
+        uint256 lastIndex = hooks.length;
 
-        for (uint256 i = 0; i < len; i++) {
-            if (hooks[i] == hook) {
-                hooks[i] = hooks[len - 1];
-                hooks.pop();
-                return;
-            }
+        if (index != lastIndex) {
+            address lastHook = hooks[lastIndex - 1];
+            hooks[index - 1] = lastHook;
+            s.hookIndex[tokenId][eventType][lastHook] = index;
         }
+
+        hooks.pop();
+        delete s.hookIndex[tokenId][eventType][hook];
+
     }
 }

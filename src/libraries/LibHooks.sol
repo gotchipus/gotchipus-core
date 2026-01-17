@@ -18,7 +18,7 @@ library LibHooks {
     event HookExecuted(uint256 indexed tokenId, address indexed hook, IHook.GotchiEvent eventType, bool success);
     event HookExecutionFailed(uint256 indexed tokenId, address indexed hook, IHook.GotchiEvent eventType, bytes reason);
 
-    function validateHookPermissions(IHook hook, IHook.Permissions memory permissions) internal view {
+    function validateHookPermissions(IHook hook, IHook.Permissions memory permissions) internal pure {
         IHook.Permissions memory actualPermissions = hook.getHookPermissions();
         
         if ((permissions.beforeExecute && !actualPermissions.beforeExecute) || 
@@ -31,7 +31,7 @@ library LibHooks {
         }
     }
 
-    function validateHookForEvent(IHook hook, IHook.GotchiEvent eventType) internal view {
+    function validateHookForEvent(IHook hook, IHook.GotchiEvent eventType) internal pure {
         IHook.Permissions memory permissions = hook.getHookPermissions();
 
         if (eventType == IHook.GotchiEvent.BeforeExecute) {
