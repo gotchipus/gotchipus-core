@@ -61,7 +61,7 @@ contract DiamondFixture is Test {
     
     address internal owner = address(this);
     
-    function setUp() public {
+    function setUp() public virtual {
         cutFacet = new DiamondCutFacet();
         loupeFacet = new DiamondLoupeFacet();
         ownershipFacet = new OwnershipFacet();

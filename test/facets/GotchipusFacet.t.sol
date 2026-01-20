@@ -96,10 +96,14 @@ contract GotchipusFacetTest is DiamondFixture {
         
         AttributesFacet attr = AttributesFacet(address(diamond));
         
-        for (uint256 i = 0; i < 100; i++) {
-            attr.pet(0);
-        }
+        vm.warp(block.timestamp + 25 hours);
         
+        // One tough and it's done
+        attr.pet(0);
+        
+        // Verify the cooling logic: Touching it again immediately should fail
+        vm.expectRevert("gotchipus already pet");
+        attr.pet(0);
 
         vm.stopPrank();
     }
