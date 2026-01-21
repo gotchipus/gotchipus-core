@@ -12,5 +12,6 @@ gas_limit = "300000000"
 [rpc_endpoints]
 devnet = "https://devnet.dplabs-internal.com"
 testnet = "https://testnet.dplabs-internal.com"
+atlantic = "https://atlantic.dplabs-internal.com"
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

@@ -16,3 +16,5 @@ docs/
 /src/mockContract/
 
 node_modules/
+
+.history
