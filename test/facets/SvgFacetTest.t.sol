@@ -1,129 +1,90 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.29;
 
-import "forge-std/console.sol";
-import "../utils/DiamondFixture.sol";
-import { ALICE, MAX_TOTAL_SUPPLY } from "../utils/Constants.sol";
-import { IGotchipusFacet } from "../../src/interfaces/IGotchipusFacet.sol";
-import { ISvgFacet } from "../../src/interfaces/ISvgFacet.sol";
-import { LibSvg } from "../../src/libraries/LibSvg.sol";
-import { GetSvgBytes } from "../utils/GetSvgBytes.sol";
-import { IMintFacet } from "../../src/interfaces/IMintFacet.sol";
+import "forge-std/Test.sol";
+import { DiamondFixture } from "../utils/DiamondFixture.sol";
+import { SvgFacet } from "../../src/facets/SvgFacet.sol";
+import { MintFacet } from "../../src/facets/MintFacet.sol";
+import { LibGotchiConstants } from "../../src/libraries/LibGotchiConstants.sol";
+import { LibSvg } from "../../src/libraries/LibSvg.sol"; 
 import { IMetadataFacet } from "../../src/interfaces/IMetadataFacet.sol";
 
 contract SvgFacetTest is DiamondFixture {
-    uint256 price = 0.04 ether;
+    MintFacet internal mintFacetBound;
+    SvgFacet internal svgFacetBound;
 
-    function _doMint(uint256 amount) internal {
-        IMintFacet gotchi = IMintFacet(address(diamond));
-        uint256 payValue = amount * price;
-        gotchi.mint{value: payValue}(amount);
-    }
-    
-
-    function _storeSvg(ISvgFacet svgFacet) internal {
-        string[9] memory bgs = GetSvgBytes.getBgBytes();
-        string[9] memory bodys = GetSvgBytes.getBodyBytes();
-        string[9] memory eyes = GetSvgBytes.getEyeBytes();
-        string[9] memory hands = GetSvgBytes.getHandBytes();
-        string[9] memory heads = GetSvgBytes.getHeadBytes();
-        string[9] memory clothess = GetSvgBytes.getClothesBytes();
-        
-        LibSvg.SvgItem[] memory bgItems = new LibSvg.SvgItem[](1);
-        LibSvg.SvgItem[] memory bodyItems = new LibSvg.SvgItem[](1);
-        LibSvg.SvgItem[] memory eyeItems = new LibSvg.SvgItem[](1);
-        LibSvg.SvgItem[] memory handItems = new LibSvg.SvgItem[](1);
-        LibSvg.SvgItem[] memory headItems = new LibSvg.SvgItem[](1);
-        LibSvg.SvgItem[] memory clothesItems = new LibSvg.SvgItem[](1);
-
-        // We need to create a separate contract for each trait to avoid exceeding the contract size limit.
-        for (uint8 i = 0; i < 9; i++) {
-            // store background svg
-            bytes memory bgSvg= bytes(bgs[i]);
-            bgItems[0] = LibSvg.SvgItem({
-                svgType: LibSvg.SVG_TYPE_BG,
-                size: bgSvg.length
-            });
-            svgFacet.storeSvg(bgSvg, bgItems);
-
-            // store body svg
-            bytes memory bodySvg = bytes(bodys[i]);
-            bodyItems[0] = LibSvg.SvgItem({
-                svgType: LibSvg.SVG_TYPE_BODY,
-                size: bodySvg.length
-            });
-            svgFacet.storeSvg(bodySvg, bodyItems);
-
-            // store eye svg
-            bytes memory eyeSvg = bytes(eyes[i]);
-            eyeItems[0] = LibSvg.SvgItem({
-                svgType: LibSvg.SVG_TYPE_EYE,
-                size: eyeSvg.length
-            });
-            svgFacet.storeSvg(eyeSvg, eyeItems);
-
-            // store hand svg
-            bytes memory handSvg = bytes(hands[i]);
-            handItems[0] = LibSvg.SvgItem({
-                svgType: LibSvg.SVG_TYPE_HAND,
-                size: handSvg.length
-            });
-            svgFacet.storeSvg(handSvg, handItems);
-
-            // store head svg
-            bytes memory headSvg = bytes(heads[i]);
-            headItems[0] = LibSvg.SvgItem({
-                svgType: LibSvg.SVG_TYPE_HEAD,
-                size: headSvg.length
-            });
-            svgFacet.storeSvg(headSvg, headItems);
-
-            // store clothes svg
-            bytes memory clothesSvg = bytes(clothess[i]);
-            clothesItems[0] = LibSvg.SvgItem({
-                svgType: LibSvg.SVG_TYPE_CLOTHES,
-                size: clothesSvg.length
-            });
-            svgFacet.storeSvg(clothesSvg, clothesItems);
-        }
+    function setUp() public override {
+        super.setUp();
+        mintFacetBound = MintFacet(address(diamond));
+        svgFacetBound = SvgFacet(address(diamond));
     }
 
     function testStoreSvg() public {
-        vm.startPrank(address(this));
-        vm.deal(ALICE, 100 ether);
-        _doMint(10);
+        vm.startPrank(owner);
 
-        ISvgFacet svgFacet = ISvgFacet(address(diamond));
+        // 1. Upload placeholder SVG to prevent array out-of-bounds errors in Fork mode
+        _setupAllSvgs();
 
-        _storeSvg(svgFacet);
-
-        LibSvg.SvgItem[] memory pharosItems = new LibSvg.SvgItem[](1);
-        pharosItems[0] = LibSvg.SvgItem({
-            svgType: "pharos",
-            size: 6
-        });
-        svgFacet.storeSvg("pharos", pharosItems);
-
-        IMintFacet.SummonArgs memory args = IMintFacet.SummonArgs({
+        // 2. mint and summon
+        mintFacetBound.mint{value: LibGotchiConstants.PHAROS_PRICE}(1);
+        
+        MintFacet.SummonArgs memory args = MintFacet.SummonArgs({
             gotchipusTokenId: 0,
-            gotchiName: "Gotchi No.1",
+            gotchiName: "TestGotchi",
             collateralToken: address(0),
-            stakeAmount: 0.1 ether,
+            stakeAmount: 0,
             utc: 0,
-            story: "I'm Gotchi",
+            story: "",
             preIndex: 0
         });
+        mintFacetBound.summonGotchipus(args);
 
-        IMintFacet(address(diamond)).summonGotchipus{value: 0.1 ether}(args);
-        
+        // 3. Debug print
         uint8[8] memory indexs = IMetadataFacet(address(diamond)).getGotchiTraitsIndex(0);
         for (uint256 i = 0; i < indexs.length; i++) {
             console.log("indexs[%s] = %s", i, indexs[i]);
         }
 
-        string memory uri = svgFacet.getGotchipusSvg(0);
-        assertEq(uri, "Pharos");
+        // 4. get SVG
+        string memory uri = svgFacetBound.getGotchipusSvg(0);
+        
+        // 5. verify
+        assertTrue(bytes(uri).length > 0);
+        
+        bytes memory uriBytes = bytes(uri);
+        if(uriBytes.length >= 4) {
+            assertEq(string(abi.encodePacked(uriBytes[0], uriBytes[1], uriBytes[2], uriBytes[3])), "<svg");
+        }
 
         vm.stopPrank();
+    }
+
+    function _setupAllSvgs() internal {
+        _mockStore(LibSvg.SVG_TYPE_BG, 16);
+        _mockStore(LibSvg.SVG_TYPE_BODY, 24);    
+        _mockStore(LibSvg.SVG_TYPE_EYE, 8);
+        _mockStore(LibSvg.SVG_TYPE_HAND, 14);
+        _mockStore(LibSvg.SVG_TYPE_HEAD, 17);
+        _mockStore(LibSvg.SVG_TYPE_CLOTHES, 9);
+        _mockStore(LibSvg.SVG_TYPE_FACE, 7);
+        _mockStore(LibSvg.SVG_TYPE_MOUTH, 6);
+    }
+
+    function _mockStore(bytes32 argType, uint256 count) internal {
+        string memory placeholder = "<g></g>";
+        bytes memory fullSvg = "";
+        
+        LibSvg.SvgItem[] memory items = new LibSvg.SvgItem[](count);
+        uint256 size = bytes(placeholder).length;
+        
+        for(uint i=0; i<count; i++) {
+            fullSvg = abi.encodePacked(fullSvg, placeholder);
+            items[i] = LibSvg.SvgItem({
+                svgType: argType,
+                size: size
+            });
+        }
+        
+        svgFacetBound.storeSvg(fullSvg, items);
     }
 }

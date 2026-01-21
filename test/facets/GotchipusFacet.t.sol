@@ -13,9 +13,10 @@ import { IGotchipusFacet } from "../../src/interfaces/IGotchipusFacet.sol";
 import { IGotchiWearableFacet } from "../../src/interfaces/IGotchiWearableFacet.sol";
 import { EquipWearableType, MAX_TRAITS_NUM } from "../../src/libraries/LibAppStorage.sol";
 import { AttributesFacet } from "../../src/facets/AttributesFacet.sol";
+import { LibGotchiConstants } from "../../src/libraries/LibGotchiConstants.sol";
 
 contract GotchipusFacetTest is DiamondFixture {
-    uint256 price = 0.04 ether;
+    uint256 price = LibGotchiConstants.PHAROS_PRICE;
 
     function _doMint(uint256 amount) internal {
         IMintFacet gotchi = IMintFacet(address(diamond));
@@ -96,10 +97,14 @@ contract GotchipusFacetTest is DiamondFixture {
         
         AttributesFacet attr = AttributesFacet(address(diamond));
         
-        for (uint256 i = 0; i < 100; i++) {
-            attr.pet(0);
-        }
+        vm.warp(block.timestamp + 25 hours);
         
+        // One tough and it's done
+        attr.pet(0);
+        
+        // Verify the cooling logic: Touching it again immediately should fail
+        vm.expectRevert("gotchipus already pet");
+        attr.pet(0);
 
         vm.stopPrank();
     }
